@@ -44,6 +44,9 @@ class Controller_DataGrabberExec extends \AbstractController {
 			return;
 		}
 		
+		$phrase_to_run['is_active'] = true;
+		$phrase_to_run->save();
+		
 		$this->picked_dtgrb = $what_dtgrb_instance;
 		$this->picked_phrase_to_run = $phrase_to_run;
 
