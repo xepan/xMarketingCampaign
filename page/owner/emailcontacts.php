@@ -31,6 +31,10 @@ class page_xMarketingCampaign_page_owner_emailcontacts extends page_componentBas
 
 			$g->addColumn('sno','sno');
 			$g->addOrder()->move('sno','first')->now();
+
+			$g->addPaginator(100);
+			$g->addQuickSearch(array('email'));
+
 		}
 
 	}
