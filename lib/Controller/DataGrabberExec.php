@@ -27,7 +27,7 @@ class Controller_DataGrabberExec extends \AbstractController {
 			$phrase_to_run = $this->add('xMarketingCampaign/Model_DataSearchPhrase');
 			$phrase_to_run->addCondition('data_grabber_id',$what_dtgrb_instance->id);
 			$phrase_to_run->addCondition('is_active',true);
-			$phrase_to_run->addCondition('page_parameter_start_value','<=' , 'page_parameter_max_value');
+			// $phrase_to_run->addCondition('page_parameter_start_value','<=' , 'page_parameter_max_value');
 			$phrase_to_run->setOrder('last_page_checked_at');
 			$phrase_to_run->setLimit(1);
 
@@ -41,6 +41,7 @@ class Controller_DataGrabberExec extends \AbstractController {
 
 		if($phrase_to_run==null or ($phrase_to_run and !$phrase_to_run->loaded())){
 			$this->owner->add('View_Info')->set('Nothing to run');
+			$this->owner->js(true)->reload();
 			return;
 		}
 		
@@ -160,7 +161,8 @@ class Controller_DataGrabberExec extends \AbstractController {
 			$subscription_save->destroy();
 		}
 
-		$this->pwner->add('View')->set('Done ' . $phrase_name);
+		$this->owner->add('View')->set('Done ' . $phrase_name);
+		$this->owner->js(true)->reload();
 	}
 
 	function grab($url, $content, $max_page_depth, $max_domain_depth, $total_max_page_depth, $initial_domain_depth, $path){
