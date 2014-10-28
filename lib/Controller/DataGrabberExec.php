@@ -165,12 +165,6 @@ class Controller_DataGrabberExec extends \AbstractController {
 		
 		try{
 		
-			preg_match('/(\.pdf|\.exe|\.msi|\.zip|\.rar|\.gz|\.tar)$/i', $url,$arr);
-			if(count($arr)) {
-				echo "retuninggg";
-				return;
-			}
-
 			$parsed_url = parse_url($url);
 
 			if($max_domain_depth != $initial_domain_depth){
@@ -248,6 +242,11 @@ class Controller_DataGrabberExec extends \AbstractController {
 				if($new_website['host'] == $parsed_url['host'] and !in_array($new_website['path'].$new_website['query'], array_keys($this->grabbed_data[$parsed_url['host']]))){
 					// grab again $maxpage_depth --
 					if($max_page_depth > 0 ){
+						preg_match('/(\.pdf|\.exe|\.msi|\.zip|\.rar|\.gz|\.tar)/i', $new_website['scheme'].'://'.$new_website['host'].'/'.$new_website['path'].'/'.$new_website['query'],$arr);
+						if(count($arr)) {
+							echo "retuninggg";
+							continue;
+						}
 						$new_content = @file_get_contents($new_website['scheme'].'://'.$new_website['host'].'/'.$new_website['path'].'/'.$new_website['query'],null,$ctx);
 						if(!$new_content) continue;
 						// echo "got same host content of ".$new_website['scheme'].'://'.$new_website['host'].'/'.$new_website['path'].'/'.$new_website['query']." grabbing now <br/>";
@@ -261,6 +260,11 @@ class Controller_DataGrabberExec extends \AbstractController {
 				if($new_website['host'] != $parsed_url['host'] and !in_array($new_website['path'].$new_website['query'], array_keys($this->grabbed_data[$parsed_url['host']]))){
 					// grab again => maxDomaindepth --
 					if($max_domain_depth > 0 ){
+						preg_match('/(\.pdf|\.exe|\.msi|\.zip|\.rar|\.gz|\.tar)/i', $new_url,$arr);
+						if(count($arr)) {
+							echo "retuninggg";
+							continue;
+						}
 						$new_content = @file_get_contents($new_url,null,$ctx);
 						if(!$new_content) continue;
 						// echo "got different host content of $new_url grabbing now <br/>";
