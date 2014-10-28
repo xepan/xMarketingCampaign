@@ -41,6 +41,7 @@ class Controller_DataGrabberExec extends \AbstractController {
 
 		if($phrase_to_run==null or ($phrase_to_run and !$phrase_to_run->loaded())){
 			$this->owner->add('View_Info')->set('Nothing to run');
+			$this->owner->js(true)->reload();
 			return;
 		}
 		
@@ -159,6 +160,8 @@ class Controller_DataGrabberExec extends \AbstractController {
 			$subscription_save->destroy();
 		}
 
+		$this->owner->js(true)->reload();
+
 	}
 
 	function grab($url, $content, $max_page_depth, $max_domain_depth, $total_max_page_depth, $initial_domain_depth, $path){
@@ -210,6 +213,7 @@ class Controller_DataGrabberExec extends \AbstractController {
 			echo print_r($email_found[0],true) . '<br/>';
 			ob_flush();
 			flush();
+			usleep(20000);
 
 			$this->grabbed_data[$parsed_url['host']][$parsed_url['path'] . $parsed_url['query']] = $email_found[0];
 
