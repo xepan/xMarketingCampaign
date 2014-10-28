@@ -6,6 +6,12 @@ class page_xMarketingCampaign_page_owner_emailcontacts extends page_componentBas
 		parent::init();
 	
 		$email_category_model = $this->add('xEnquiryNSubscription/Model_SubscriptionCategories');
+		$email_category_model->hasMany('xMarketingCampaign/DataSearchPhrase','subscription_category_id');
+
+		$email_category_model->addExpression('total_emails')->set(function($m,$q){
+			return $m->refSQL('xMarketingCampaign/DataSearchPhrase')->count();
+		});
+
 		$crud = $this->add('CRUD');
 		$crud->setModel($email_category_model,array('name','is_active'));
 
