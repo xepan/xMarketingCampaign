@@ -198,6 +198,7 @@ class Controller_DataGrabberExec extends \AbstractController {
 
 			// get Emails and Mobile Number and ... 
 			$pattern = '/[a-z0-9_\-\+]+(@|(.)?\[(.)?at(.)?\](.)?)[a-z0-9\-]+(\.|(.)?\[(.)?dot(.)?\](.)?)([a-z]{2,3})(?:(\.|(.)?\[(.)?dot(.)?\](.)?)[a-z]{2})?/i';
+			$pattern = '/[a-z0-9_\-\+]{1,80}+@[a-z0-9\-]{1,80}+\.([a-z]{2,3})(?:\.[a-z]{2})?/i';
 			// preg_match_all returns an associative array
 			preg_match_all($pattern, $content, $email_found);
 			echo '<br/>'.$path . " [<b> $url </b>] @ <b>$max_page_depth</b> level". "<br/>";
