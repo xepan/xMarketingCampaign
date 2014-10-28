@@ -24,6 +24,8 @@ class Model_DataSearchPhrase extends \Model_Table{
 		$this->addField('page_parameter_max_value')->system(false);
 		$this->addField('last_page_checked_at')->type('datetime')->system(false);
 
+		
+
 		$this->addHook('beforeSave',$this);
 
 		$this->add('dynamic_model/Controller_AutoCreator');

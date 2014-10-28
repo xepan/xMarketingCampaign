@@ -8,12 +8,12 @@ class page_xMarketingCampaign_page_owner_emailcontacts extends page_componentBas
 		$email_category_model = $this->add('xEnquiryNSubscription/Model_SubscriptionCategories');
 		$email_category_model->hasMany('xMarketingCampaign/DataSearchPhrase','subscription_category_id');
 
-		$email_category_model->addExpression('total_emails')->set(function($m,$q){
+		$email_category_model->addExpression('total_phrases')->set(function($m,$q){
 			return $m->refSQL('xMarketingCampaign/DataSearchPhrase')->count();
 		});
 
 		$crud = $this->add('CRUD');
-		$crud->setModel($email_category_model,array('name','is_active'));
+		$crud->setModel($email_category_model,array('name','is_active','total_phrases','total_emails'));
 
 		if($g=$crud->grid){
 			$btn = $g->addButton('Manage Data Grabber');
@@ -21,6 +21,8 @@ class page_xMarketingCampaign_page_owner_emailcontacts extends page_componentBas
 
 			$btn1 = $g->addButton('Exec Grabber');
 			$btn1->js('click',$g->js()->univ()->frameURL('Execute Data Grabber',$this->api->url('xMarketingCampaign_page_owner_mrkt_dtgrb_exec')));
+
+			$g->addTotals(array('total_emails'));	
 		}
 
 		$subs_crud = $crud->addRef('xEnquiryNSubscription/Subscription',array('label'=>'Emails','fields'=>array('category','email','subscribed_on','send_news_letters')));		
@@ -40,7 +42,6 @@ class page_xMarketingCampaign_page_owner_emailcontacts extends page_componentBas
 
 			$g->addPaginator(100);
 			$g->addQuickSearch(array('email'));
-
 		}
 
 	}
