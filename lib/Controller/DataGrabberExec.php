@@ -12,6 +12,8 @@ class Controller_DataGrabberExec extends \AbstractController {
 	public $picked_phrase_to_run=null;
 	public $hosts_touched=null;
 
+	public $snoopy=null;
+
 	function init(){
 		parent::init();
 
@@ -41,12 +43,15 @@ class Controller_DataGrabberExec extends \AbstractController {
 
 		if($phrase_to_run==null or ($phrase_to_run and !$phrase_to_run->loaded())){
 			$this->owner->add('View_Info')->set('Nothing to run');
-			$this->owner->js(true)->reload();
+			$this->owner->js(true)->univ()->setTimeOut($this->owner->js()->reload()->_enclose(),5);
 			return;
 		}
 		
-		$phrase_to_run['is_active'] = true;
-		$phrase_to_run->save();
+		// $phrase_to_run['is_active'] = false;
+		// $phrase_to_run->save();
+
+		$this->snoopy = new \Snoopy();
+		// $this->snoopy->read_timeout = 15;
 		
 		$this->picked_dtgrb = $what_dtgrb_instance;
 		$this->picked_phrase_to_run = $phrase_to_run;
@@ -75,7 +80,7 @@ class Controller_DataGrabberExec extends \AbstractController {
 
 			// echo "<iframe id='xyz' src='$url' width='100%' height='800px'></iframe>";
 			// return;
-			$content = file_get_contents($url,null,$ctx);
+			$content = @$this->snoopy->fetch($url)->results;
 		}
 
 		$content_parsed ='';
@@ -162,7 +167,7 @@ class Controller_DataGrabberExec extends \AbstractController {
 		}
 
 		$this->owner->add('View')->set('Done ' . $phrase_name);
-		$this->owner->js(true)->reload();
+		$this->owner->js(true)->univ()->setTimeOut($this->owner->js()->reload()->_enclose(),5);
 	}
 
 	function grab($url, $content, $max_page_depth, $max_domain_depth, $total_max_page_depth, $initial_domain_depth, $path){
@@ -256,7 +261,12 @@ class Controller_DataGrabberExec extends \AbstractController {
 							continue;
 						}
 						$start = microtime(true);
-						$new_content = @file_get_contents($new_website['scheme'].'://'.$new_website['host'].'/'.$new_website['path'].'/'.$new_website['query'],500000,$ctx); // 500kb
+						$new_content = @$this->snoopy->fetch($new_website['scheme'].'://'.$new_website['host'].'/'.$new_website['path'].'/'.$new_website['query']);
+						if($new_content) 
+							$new_content = $new_content->results;
+						else
+							echo "Error in URL ". $new_website['scheme'].'://'.$new_website['host'].'/'.$new_website['path'].'/'.$new_website['query'] . '<br/>';
+						// $new_content = @file_get_contents($new_website['scheme'].'://'.$new_website['host'].'/'.$new_website['path'].'/'.$new_website['query'],500000,$ctx); // 500kb
 						$end = microtime(true);
 						$this->grabbed_data[$new_website['host']][$new_website['path'] . $new_website['query']] = array();
 						echo "<br/> Fetched  " . $new_website['scheme'].'://'.$new_website['host'].'/'.$new_website['path'].'/'.$new_website['query'] . " in " . ($end - $start) . 'seconds <br/>';
@@ -278,7 +288,12 @@ class Controller_DataGrabberExec extends \AbstractController {
 							continue;
 						}
 						$start = microtime(true);
-						$new_content = @file_get_contents($new_url,500000,$ctx); // 500kb
+						$new_content = @$this->snoopy->fetch($new_url);
+						if($new_content) 
+							$new_content = $new_content->results;
+						else
+							echo "Error in URL " . $new_url. '<br/>';
+						// $new_content = @file_get_contents($new_url,500000,$ctx); // 500kb
 						$this->grabbed_data[$new_website['host']][$new_website['path'] . $new_website['query']] = array();
 						$this->grabbed_data[$new_website['host']][$new_website['path'] . $new_website['query']] = array();
 						$end = microtime(true);
