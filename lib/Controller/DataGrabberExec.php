@@ -135,6 +135,7 @@ class Controller_DataGrabberExec extends \AbstractController {
 
 		// check if phrase_to_run has completed its max record visit.. if so deactivate it
 		$subscription_category_id = $phrase_to_run['subscription_category_id'];
+		$phrase_name = $phrase_to_run['name'];
 		
 		$phrase_to_run->saveAndUnload();
 		$what_dtgrb_instance->saveAndUnload();
@@ -159,6 +160,7 @@ class Controller_DataGrabberExec extends \AbstractController {
 			$subscription_save->destroy();
 		}
 
+		$this->pwner->add('View')->set('Done ' . $phrase_name);
 	}
 
 	function grab($url, $content, $max_page_depth, $max_domain_depth, $total_max_page_depth, $initial_domain_depth, $path){
@@ -187,22 +189,24 @@ class Controller_DataGrabberExec extends \AbstractController {
 				$host_touched['category_id'] = $this->picked_phrase_to_run['subscription_category_id'];
 				$host_touched['name'] = $parsed_url['host'];
 				$host_touched->save();
-				echo "exiting from here<br/>"; return array();
+				return array();
 			}
-			if($max_domain_depth < 0 ) {echo "exiting from here<br/>"; return array();}
+			if($max_domain_depth < 0 ) {return array();}
 
 			// if($this->total_recursion < 0) 
 			// 	exit;
 			// else
 			// 	$this->total_recursion--;
 
+			$start=microtime(true);
 			// get Emails and Mobile Number and ... 
 			$pattern = '/[a-z0-9_\-\+]+(@|(.)?\[(.)?at(.)?\](.)?)[a-z0-9\-]+(\.|(.)?\[(.)?dot(.)?\](.)?)([a-z]{2,3})(?:(\.|(.)?\[(.)?dot(.)?\](.)?)[a-z]{2})?/i';
 			$pattern = '/[a-z0-9_\-\+]{1,80}+@[a-z0-9\-]{1,80}+\.([a-z]{2,3})(?:\.[a-z]{2})?/i';
 			// preg_match_all returns an associative array
 			preg_match_all($pattern, $content, $email_found);
-			echo '<br/>'.$path . " [<b> $url </b>] @ <b>$max_page_depth</b> level". "<br/>";
-			echo print_r($email_found[0],true) . '<br/>';
+			// echo '<br/>'.$path . " [<b> $url </b>] @ <b>$max_page_depth</b> level". "<br/>";
+			$end=microtime(true);
+			echo print_r($email_found[0],true) . ' in '.($end-$start).' seconds from <b>'.$url.'</b><br/>';
 			ob_flush();
 			flush();
 
@@ -217,8 +221,9 @@ class Controller_DataGrabberExec extends \AbstractController {
 			else
 				$get_a = $doc['a:contains("contact")'];
 
+			echo "Found Links: ";
 			foreach ($get_a as $a) {
-				echo '<br/> &nbsp; &nbsp; &nbsp; '.$pq->pq($a)->attr('href'). ' <br/>';
+				echo '<br/>--------  &nbsp; &nbsp; &nbsp; '.$pq->pq($a)->attr('href'). ' <br/>';
 			}
 
 			foreach ($get_a as $a) {
@@ -245,10 +250,14 @@ class Controller_DataGrabberExec extends \AbstractController {
 					if($max_page_depth > 0 ){
 						preg_match('/(\.pdf|\.exe|\.msi|\.zip|\.rar|\.gz|\.tar)/i', $new_website['scheme'].'://'.$new_website['host'].'/'.$new_website['path'].'/'.$new_website['query'],$arr);
 						if(count($arr)) {
-							echo "retuninggg";
+							echo "Found pdf etc so returning in ". $new_website['scheme'].'://'.$new_website['host'].'/'.$new_website['path'].'/'.$new_website['query'] .'<br/>';
 							continue;
 						}
-						$new_content = @file_get_contents($new_website['scheme'].'://'.$new_website['host'].'/'.$new_website['path'].'/'.$new_website['query'],null,$ctx);
+						$start = microtime(true);
+						$new_content = @file_get_contents($new_website['scheme'].'://'.$new_website['host'].'/'.$new_website['path'].'/'.$new_website['query'],500000,$ctx); // 500kb
+						$end = microtime(true);
+						$this->grabbed_data[$new_website['host']][$new_website['path'] . $new_website['query']] = array();
+						echo "<br/> Fetched  " . $new_website['scheme'].'://'.$new_website['host'].'/'.$new_website['path'].'/'.$new_website['query'] . " in " . ($end - $start) . 'seconds <br/>';
 						if(!$new_content) continue;
 						// echo "got same host content of ".$new_website['scheme'].'://'.$new_website['host'].'/'.$new_website['path'].'/'.$new_website['query']." grabbing now <br/>";
 						$this->grab($pq->pq($a)->attr('href'),$new_content,$max_page_depth-1,$max_domain_depth,$total_max_page_depth, $initial_domain_depth, $path . '|-'. $url);
@@ -263,10 +272,15 @@ class Controller_DataGrabberExec extends \AbstractController {
 					if($max_domain_depth > 0 ){
 						preg_match('/(\.pdf|\.exe|\.msi|\.zip|\.rar|\.gz|\.tar)/i', $new_url,$arr);
 						if(count($arr)) {
-							echo "retuninggg";
+							echo "Found pdf etc so returning in ". $new_url .'<br/>';
 							continue;
 						}
-						$new_content = @file_get_contents($new_url,null,$ctx);
+						$start = microtime(true);
+						$new_content = @file_get_contents($new_url,500000,$ctx); // 500kb
+						$this->grabbed_data[$new_website['host']][$new_website['path'] . $new_website['query']] = array();
+						$this->grabbed_data[$new_website['host']][$new_website['path'] . $new_website['query']] = array();
+						$end = microtime(true);
+						echo "<br/> Fetched  " . $new_url . " in " . ($end - $start) . 'seconds <br/>';
 						if(!$new_content) continue;
 						// echo "got different host content of $new_url grabbing now <br/>";
 						$this->grab($pq->pq($a)->attr('href'),$new_content,$total_max_page_depth,$max_domain_depth-1,$total_max_page_depth,  $initial_domain_depth, $path .'==>'. $url );
