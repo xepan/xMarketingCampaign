@@ -43,15 +43,15 @@ class Controller_DataGrabberExec extends \AbstractController {
 
 		if($phrase_to_run==null or ($phrase_to_run and !$phrase_to_run->loaded())){
 			$this->owner->add('View_Info')->set('Nothing to run');
-			$this->owner->js(true)->univ()->setTimeOut($this->owner->js()->reload()->_enclose(),5);
+			$this->owner->js(true)->univ()->setTimeout($this->owner->js()->reload()->_enclose(),5);
 			return;
 		}
 		
 		// $phrase_to_run['is_active'] = false;
 		// $phrase_to_run->save();
 
-		$this->snoopy = new \Snoopy();
-		// $this->snoopy->read_timeout = 15;
+		// $snoopy = new \Snoopy();
+		// $snoopy->read_timeout = 15;
 		
 		$this->picked_dtgrb = $what_dtgrb_instance;
 		$this->picked_phrase_to_run = $phrase_to_run;
@@ -80,7 +80,7 @@ class Controller_DataGrabberExec extends \AbstractController {
 
 			// echo "<iframe id='xyz' src='$url' width='100%' height='800px'></iframe>";
 			// return;
-			$content = @$this->snoopy->fetch($url)->results;
+			$content = @file_get_contents($url);
 		}
 
 		$content_parsed ='';
@@ -167,7 +167,7 @@ class Controller_DataGrabberExec extends \AbstractController {
 		}
 
 		$this->owner->add('View')->set('Done ' . $phrase_name);
-		$this->owner->js(true)->univ()->setTimeOut($this->owner->js()->reload()->_enclose(),5);
+		$this->owner->js(true)->univ()->setTimeout($this->owner->js()->reload()->_enclose(),5);
 	}
 
 	function grab($url, $content, $max_page_depth, $max_domain_depth, $total_max_page_depth, $initial_domain_depth, $path){
@@ -251,21 +251,24 @@ class Controller_DataGrabberExec extends \AbstractController {
 				    )
 				);
 
+				// $snoopy = new \Snoopy();
+				// $snoopy->read_timeout = 15;
+
 				// if from same host and !already visited
 				if($new_website['host'] == $parsed_url['host'] and !in_array($new_website['path'].$new_website['query'], array_keys($this->grabbed_data[$parsed_url['host']]))){
 					// grab again $maxpage_depth --
 					if($max_page_depth > 0 ){
-						preg_match('/(\.pdf|\.exe|\.msi|\.zip|\.rar|\.gz|\.tar)/i', $new_website['scheme'].'://'.$new_website['host'].'/'.$new_website['path'].'/'.$new_website['query'],$arr);
+						preg_match('/(\.pdf|\.exe|\.msi|\.zip|\.rar|\.gz|\.tar|\.flv|\.mov|\.mpg|\.mpeg)/i', $new_website['scheme'].'://'.$new_website['host'].'/'.$new_website['path'].'/'.$new_website['query'],$arr);
 						if(count($arr)) {
 							echo "Found pdf etc so returning in ". $new_website['scheme'].'://'.$new_website['host'].'/'.$new_website['path'].'/'.$new_website['query'] .'<br/>';
 							continue;
 						}
 						$start = microtime(true);
-						$new_content = @$this->snoopy->fetch($new_website['scheme'].'://'.$new_website['host'].'/'.$new_website['path'].'/'.$new_website['query']);
-						if($new_content) 
-							$new_content = $new_content->results;
-						else
-							echo "Error in URL ". $new_website['scheme'].'://'.$new_website['host'].'/'.$new_website['path'].'/'.$new_website['query'] . '<br/>';
+						$new_content = @file_get_contents($new_website['scheme'].'://'.$new_website['host'].'/'.$new_website['path'].'/'.$new_website['query']);
+						// if($new_content) 
+						// 	$new_content = $new_content->results;
+						// else
+						// 	echo "Error in URL ". $new_website['scheme'].'://'.$new_website['host'].'/'.$new_website['path'].'/'.$new_website['query'] . ' :: timed_out '.$snoopy->timed_out.'<br/>';
 						// $new_content = @file_get_contents($new_website['scheme'].'://'.$new_website['host'].'/'.$new_website['path'].'/'.$new_website['query'],500000,$ctx); // 500kb
 						$end = microtime(true);
 						$this->grabbed_data[$new_website['host']][$new_website['path'] . $new_website['query']] = array();
@@ -282,17 +285,17 @@ class Controller_DataGrabberExec extends \AbstractController {
 				if($new_website['host'] != $parsed_url['host'] and !in_array($new_website['path'].$new_website['query'], array_keys($this->grabbed_data[$parsed_url['host']]))){
 					// grab again => maxDomaindepth --
 					if($max_domain_depth > 0 ){
-						preg_match('/(\.pdf|\.exe|\.msi|\.zip|\.rar|\.gz|\.tar)/i', $new_url,$arr);
+						preg_match('/(\.pdf|\.exe|\.msi|\.zip|\.rar|\.gz|\.tar|\.flv|\.mov|\.mpg|\.mpeg)/i', $new_url,$arr);
 						if(count($arr)) {
 							echo "Found pdf etc so returning in ". $new_url .'<br/>';
 							continue;
 						}
 						$start = microtime(true);
-						$new_content = @$this->snoopy->fetch($new_url);
-						if($new_content) 
-							$new_content = $new_content->results;
-						else
-							echo "Error in URL " . $new_url. '<br/>';
+						$new_content = @file_get_contents($new_url);
+						// if($new_content) 
+						// 	$new_content = $new_content->results;
+						// else
+						// 	echo "Error in URL " . $new_url.  ' :: timed_out '.$snoopy->timed_out.'<br/>';
 						// $new_content = @file_get_contents($new_url,500000,$ctx); // 500kb
 						$this->grabbed_data[$new_website['host']][$new_website['path'] . $new_website['query']] = array();
 						$this->grabbed_data[$new_website['host']][$new_website['path'] . $new_website['query']] = array();
@@ -312,4 +315,36 @@ class Controller_DataGrabberExec extends \AbstractController {
 			return;
 		}
 	}
+
+	function multi_request($urls)
+	{
+		$curly = array();
+		$result = array();
+		$mh = curl_multi_init();
+
+		foreach ($urls as $id => $url) {
+		$curly[$id] = curl_init();
+		curl_setopt($curly[$id], CURLOPT_URL, $url);
+		curl_setopt($curly[$id], CURLOPT_HEADER, 0);
+		curl_setopt($curly[$id], CURLOPT_RETURNTRANSFER, 1);
+		curl_setopt($curly[$id], CURLOPT_TIMEOUT, 30);
+		curl_setopt($curly[$id], CURLOPT_FOLLOWLOCATION, true);
+		curl_setopt($curly[$id], CURLOPT_SSL_VERIFYPEER, 0);
+		curl_setopt($curly[$id], CURLOPT_SSL_VERIFYHOST, 0);
+		curl_multi_add_handle($mh, $curly[$id]);
+		}
+
+		$running = null;
+		do {
+		curl_multi_exec($mh, $running);
+		} while($running > 0);
+
+		foreach($curly as $id => $c) {
+		$result[$id] = curl_multi_getcontent($c);
+		curl_multi_remove_handle($mh, $c);
+		}
+		curl_multi_close($mh);
+		return $result;
+	}
+
 }
