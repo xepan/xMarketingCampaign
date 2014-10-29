@@ -142,7 +142,7 @@ class Controller_DataGrabberExec extends \AbstractController {
 		// check if phrase_to_run has completed its max record visit.. if so deactivate it
 		$subscription_category_id = $phrase_to_run['subscription_category_id'];
 		$phrase_name = $phrase_to_run['name'];
-		
+		$phrase_to_run_id = $phrase_to_run->id;
 		$phrase_to_run->saveAndUnload();
 		$what_dtgrb_instance->saveAndUnload();
 
@@ -161,61 +161,37 @@ class Controller_DataGrabberExec extends \AbstractController {
 			$subscription_save = $this->add('xEnquiryNSubscription/Model_Subscription');
 			$subscription_save->addCondition('email',$email);
 			$subscription_save->addCondition('category_id',$subscription_category_id);
+			$subscription_save->addCondition('from_app','DataGrabberPhrase');
+			$subscription_save->addCondition('from_id',$phrase_to_run_id);
 			$subscription_save->tryLoadAny();
 			if(!$subscription_save->loaded()) $subscription_save->save();
 			$subscription_save->destroy();
 		}
-
+		echo "<h1> RESULT : </h1>";
+		echo "<h3>Found " . count($found_emails). " Emails in this shot </h3>";
+		// print_r($this->grabbed_data);
 		$this->owner->add('View')->set('Done ' . $phrase_name);
 		$this->owner->js(true)->univ()->setTimeout($this->owner->js()->reload()->_enclose(),5);
 	}
 
+	// Url and its fetched_content
 	function grab($url, $content, $max_page_depth, $max_domain_depth, $total_max_page_depth, $initial_domain_depth, $path){
 		
 		try{
 		
 			$parsed_url = parse_url($url);
 
-			if($max_domain_depth != $initial_domain_depth){
-				$host_touched = $this->add('xEnquiryNSubscription/Model_HostsTouched');
-				$host_touched->addCondition('category_id',$this->picked_phrase_to_run['subscription_category_id']);
-				$host_touched->addCondition('name',$parsed_url['host']);
-				$host_touched->tryLoadAny();
-
-				if($host_touched->loaded()){
-					echo "host found";
-					return;	
-				} 
-				
-			}
-
-			// if(count($this->grabbed_data[$parsed_url['host']][0])) return; // This domain has given its email once.. do not fetch other pages .. might get same results only
-
-			if($max_page_depth < 0 ) {
-				$host_touched = $this->add('xEnquiryNSubscription/Model_HostsTouched');
-				$host_touched['category_id'] = $this->picked_phrase_to_run['subscription_category_id'];
-				$host_touched['name'] = $parsed_url['host'];
-				$host_touched->save();
-				return array();
-			}
-			if($max_domain_depth < 0 ) {return array();}
-
-			// if($this->total_recursion < 0) 
-			// 	exit;
-			// else
-			// 	$this->total_recursion--;
-
 			$start=microtime(true);
 			// get Emails and Mobile Number and ... 
-			$pattern = '/[a-z0-9_\-\+]+(@|(.)?\[(.)?at(.)?\](.)?)[a-z0-9\-]+(\.|(.)?\[(.)?dot(.)?\](.)?)([a-z]{2,3})(?:(\.|(.)?\[(.)?dot(.)?\](.)?)[a-z]{2})?/i';
-			$pattern = '/[a-z0-9_\-\+]{1,80}+@[a-z0-9\-]{1,80}+\.([a-z]{2,3})(?:\.[a-z]{2})?/i';
+			$pattern = '/[a-z0-9_\-\+\.]+(@|(.)?\[(.)?at(.)?\](.)?)[a-z0-9\-]+(\.|(.)?\[(.)?dot(.)?\](.)?)([a-z]{2,3})(?:(\.|(.)?\[(.)?dot(.)?\](.)?)[a-z]{2})?/i';
+			$pattern = '/[a-z0-9_\-\+\.]{1,80}+@[a-z0-9\-]{1,80}+\.([a-z]{2,3})(?:\.[a-z]{2})?/i';
 			// preg_match_all returns an associative array
 			preg_match_all($pattern, $content, $email_found);
 			// echo '<br/>'.$path . " [<b> $url </b>] @ <b>$max_page_depth</b> level". "<br/>";
 			$end=microtime(true);
-			echo print_r($email_found[0],true) . ' in '.($end-$start).' seconds from <b>'.$url.'</b><br/>';
-			ob_flush();
-			flush();
+			// echo print_r($email_found[0],true) . ' in '.($end-$start).' seconds from <b>'.$url.'</b><br/>';
+			// ob_flush();
+			// flush();
 
 			$this->grabbed_data[$parsed_url['host']][$parsed_url['path'] . $parsed_url['query']] = $email_found[0];
 
@@ -223,93 +199,120 @@ class Controller_DataGrabberExec extends \AbstractController {
 			$pq = new \phpQuery();
 			$doc = @$pq->newDocumentHTML($content);
 			
-			if($max_domain_depth== $initial_domain_depth)
+			// if($max_domain_depth== $initial_domain_depth)
 				$get_a = $doc['a'];
-			else
+			// else
+				// $get_a = $doc['a:contains("contact")'];
+
+			// echo "Found Links: ";
+			
+			$unique_filtered_links = array();
+
+			foreach ($get_a as $a) {
+				// echo '<br/>--------  &nbsp; &nbsp; &nbsp; '.$pq->pq($a)->attr('href'). ' <br/>';
+				preg_match('/(\.pdf|\.exe|\.msi|\.zip|\.rar|\.gz|\.tar|\.flv|\.mov|\.mpg|\.mpeg)/i', $pq->pq($a)->attr('href'),$arr);
+				if(count($arr)) {
+					// echo "Found pdf etc so not taking to check in ". $pq->pq($a)->attr('href') .'<br/>';
+					continue;
+				}
+
+
+				$new_website = parse_url($pq->pq($a)->attr('href'));
+				if(!$new_website['scheme']) $new_website['scheme'] = $parsed_url['scheme'];
+				if(!$new_website['host']) $new_website['host'] = $parsed_url['host'];
+				$new_url = $new_website['scheme'].'://'.$new_website['host'] . '/'.$new_website['path'].$new_website['query'];
+
+				// if(in_array($new_website['path'].$new_website['query'], array_keys($this->grabbed_data[$parsed_url['host']]))){
+				// 	echo "Already Visited <br/>";
+				// 	continue;
+				// }
+
+				if(!in_array($new_url, $unique_filtered_links)){
+					$unique_filtered_links[] = $new_url;
+				}
+			}
+			// echo "Unique Links to check <br/>";
+			// print_r($unique_filtered_links);
+
+			$start = microtime(true);
+			$results = $this->multi_request($unique_filtered_links);
+			// echo "Fetched ". count($unique_filtered_links).  " in ". (microtime(true) - $start) . ' seconds <br/>';
+
+			$contact_us_pages =array();
+			foreach ($unique_filtered_links as $id => $site_url) {
+				// somehow if no result was found just carry on
+				if(!$results[$id]) {
+					// echo "No Result for " . $site_url. '<br/>';
+					continue;
+				}
+
+				$parsed_url = parse_url($site_url);
+
+				preg_match_all($pattern, $results[$id], $email_found);
+				$this->grabbed_data[$parsed_url['host']][$parsed_url['path'] . $parsed_url['query']] = $email_found[0];
+
+				
+				$doc = @$pq->newDocumentHTML($results[$id]);
 				$get_a = $doc['a:contains("contact")'];
 
-			echo "Found Links: ";
-			foreach ($get_a as $a) {
-				echo '<br/>--------  &nbsp; &nbsp; &nbsp; '.$pq->pq($a)->attr('href'). ' <br/>';
-			}
+				foreach ($get_a as $a) {
+					// echo '<br/>--------  &nbsp; &nbsp; &nbsp; '.$pq->pq($a)->attr('href'). ' <br/>';
+					preg_match('/(\.pdf|\.exe|\.msi|\.zip|\.rar|\.gz|\.tar|\.flv|\.mov|\.mpg|\.mpeg)/i', $pq->pq($a)->attr('href'),$arr);
+					if(count($arr)) {
+						// echo "Found pdf etc so not taking to check in ". $pq->pq($a)->attr('href') .'<br/>';
+						continue;
+					}
 
-			foreach ($get_a as $a) {
-				$new_url = $pq->pq($a)->attr('href');
-				// echo "checking now " . $new_url . '<br/>';
-				$new_website = parse_url($new_url);
-				
-				if(!isset($new_website['host'])){
-					$new_website['host'] = $parsed_url['host'];
-					$new_website['scheme'] = $parsed_url['scheme'];
-				}
 
-				$ctx = stream_context_create(array(
-				    'http' => array(
-				        'timeout' => 10,
-				        'user_agent'=>'Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1)'
-				        )
-				    )
-				);
+					$new_website = parse_url($pq->pq($a)->attr('href'));
+					if(!$new_website['scheme']) $new_website['scheme'] = $parsed_url['scheme'];
+					if(!$new_website['host']) $new_website['host'] = $parsed_url['host'];
+					$new_url = $new_website['scheme'].'://'.$new_website['host'] . '/'.$new_website['path'].$new_website['query'];
 
-				// $snoopy = new \Snoopy();
-				// $snoopy->read_timeout = 15;
+					// if(in_array($new_website['path'].$new_website['query'], array_keys(is_array($this->grabbed_data[$parsed_url['host']])?:array()))){
+					// 	echo "Already Visited <br/>";
+					// 	continue;
+					// }
 
-				// if from same host and !already visited
-				if($new_website['host'] == $parsed_url['host'] and !in_array($new_website['path'].$new_website['query'], array_keys($this->grabbed_data[$parsed_url['host']]))){
-					// grab again $maxpage_depth --
-					if($max_page_depth > 0 ){
-						preg_match('/(\.pdf|\.exe|\.msi|\.zip|\.rar|\.gz|\.tar|\.flv|\.mov|\.mpg|\.mpeg)/i', $new_website['scheme'].'://'.$new_website['host'].'/'.$new_website['path'].'/'.$new_website['query'],$arr);
-						if(count($arr)) {
-							echo "Found pdf etc so returning in ". $new_website['scheme'].'://'.$new_website['host'].'/'.$new_website['path'].'/'.$new_website['query'] .'<br/>';
-							continue;
-						}
-						$start = microtime(true);
-						$new_content = @file_get_contents($new_website['scheme'].'://'.$new_website['host'].'/'.$new_website['path'].'/'.$new_website['query']);
-						// if($new_content) 
-						// 	$new_content = $new_content->results;
-						// else
-						// 	echo "Error in URL ". $new_website['scheme'].'://'.$new_website['host'].'/'.$new_website['path'].'/'.$new_website['query'] . ' :: timed_out '.$snoopy->timed_out.'<br/>';
-						// $new_content = @file_get_contents($new_website['scheme'].'://'.$new_website['host'].'/'.$new_website['path'].'/'.$new_website['query'],500000,$ctx); // 500kb
-						$end = microtime(true);
-						$this->grabbed_data[$new_website['host']][$new_website['path'] . $new_website['query']] = array();
-						echo "<br/> Fetched  " . $new_website['scheme'].'://'.$new_website['host'].'/'.$new_website['path'].'/'.$new_website['query'] . " in " . ($end - $start) . 'seconds <br/>';
-						if(!$new_content) continue;
-						// echo "got same host content of ".$new_website['scheme'].'://'.$new_website['host'].'/'.$new_website['path'].'/'.$new_website['query']." grabbing now <br/>";
-						$this->grab($pq->pq($a)->attr('href'),$new_content,$max_page_depth-1,$max_domain_depth,$total_max_page_depth, $initial_domain_depth, $path . '|-'. $url);
-					}else{
-						// return;
+					if(!in_array($new_url, $contact_us_pages)){
+						$contact_us_pages[] = $new_url;
 					}
 				}
+			}
+			
+			// echo "Unique Contact Links to check <br/>";
+			// print_r($contact_us_pages);
 
-				// else if from another host and ! already visted
-				if($new_website['host'] != $parsed_url['host'] and !in_array($new_website['path'].$new_website['query'], array_keys($this->grabbed_data[$parsed_url['host']]))){
-					// grab again => maxDomaindepth --
-					if($max_domain_depth > 0 ){
-						preg_match('/(\.pdf|\.exe|\.msi|\.zip|\.rar|\.gz|\.tar|\.flv|\.mov|\.mpg|\.mpeg)/i', $new_url,$arr);
-						if(count($arr)) {
-							echo "Found pdf etc so returning in ". $new_url .'<br/>';
-							continue;
-						}
-						$start = microtime(true);
-						$new_content = @file_get_contents($new_url);
-						// if($new_content) 
-						// 	$new_content = $new_content->results;
-						// else
-						// 	echo "Error in URL " . $new_url.  ' :: timed_out '.$snoopy->timed_out.'<br/>';
-						// $new_content = @file_get_contents($new_url,500000,$ctx); // 500kb
-						$this->grabbed_data[$new_website['host']][$new_website['path'] . $new_website['query']] = array();
-						$this->grabbed_data[$new_website['host']][$new_website['path'] . $new_website['query']] = array();
-						$end = microtime(true);
-						echo "<br/> Fetched  " . $new_url . " in " . ($end - $start) . 'seconds <br/>';
-						if(!$new_content) continue;
-						// echo "got different host content of $new_url grabbing now <br/>";
-						$this->grab($pq->pq($a)->attr('href'),$new_content,$total_max_page_depth,$max_domain_depth-1,$total_max_page_depth,  $initial_domain_depth, $path .'==>'. $url );
-					}else{
-						// return;
-					}
+			$start = microtime(true);
+			$results = $this->multi_request($contact_us_pages);
+			// echo "Fetched ". count($contact_us_pages).  " in ". (microtime(true) - $start) . ' seconds <br/>';
+
+			foreach ($results as $id => $contact_page_content) {
+				if(!$results[$id]){
+					// echo "Contact Page no result ". $contact_us_pages[$id] .'<br/>';
+					continue;
 				}
 
+				$parsed_url = parse_url($contact_us_pages[$id]);
+
+				preg_match_all($pattern, $contact_page_content, $email_found);
+				$this->grabbed_data[$parsed_url['host']][$parsed_url['path'] . $parsed_url['query']] = $email_found[0];
 			}
+
+
+
+
+
+				// // if from same host and !already visited
+				// if($new_website['host'] == $parsed_url['host'] and !in_array($new_website['path'].$new_website['query'], array_keys($this->grabbed_data[$parsed_url['host']]))){
+				// 	$this->grab($new_url,$results[$id],$max_page_depth-1,$max_domain_depth,$total_max_page_depth, $initial_domain_depth, $path . '|-'. $new_url);
+				// }
+				// // else if from another host and ! already visted
+				// if($new_website['host'] != $parsed_url['host'] and !in_array($new_website['path'].$new_website['query'], array_keys($this->grabbed_data[$parsed_url['host']]))){
+				// 	$this->grab($new_url,$results[$id],$total_max_page_depth,$max_domain_depth-1,$total_max_page_depth,  $initial_domain_depth, $path .'==>'. $new_url );
+				// }
+
+
 
 		}catch(Exception $e){
 			return;
@@ -323,25 +326,25 @@ class Controller_DataGrabberExec extends \AbstractController {
 		$mh = curl_multi_init();
 
 		foreach ($urls as $id => $url) {
-		$curly[$id] = curl_init();
-		curl_setopt($curly[$id], CURLOPT_URL, $url);
-		curl_setopt($curly[$id], CURLOPT_HEADER, 0);
-		curl_setopt($curly[$id], CURLOPT_RETURNTRANSFER, 1);
-		curl_setopt($curly[$id], CURLOPT_TIMEOUT, 30);
-		curl_setopt($curly[$id], CURLOPT_FOLLOWLOCATION, true);
-		curl_setopt($curly[$id], CURLOPT_SSL_VERIFYPEER, 0);
-		curl_setopt($curly[$id], CURLOPT_SSL_VERIFYHOST, 0);
-		curl_multi_add_handle($mh, $curly[$id]);
+			$curly[$id] = curl_init();
+			curl_setopt($curly[$id], CURLOPT_URL, $url);
+			curl_setopt($curly[$id], CURLOPT_HEADER, 0);
+			curl_setopt($curly[$id], CURLOPT_RETURNTRANSFER, 1);
+			curl_setopt($curly[$id], CURLOPT_TIMEOUT, 30);
+			curl_setopt($curly[$id], CURLOPT_FOLLOWLOCATION, true);
+			curl_setopt($curly[$id], CURLOPT_SSL_VERIFYPEER, 0);
+			curl_setopt($curly[$id], CURLOPT_SSL_VERIFYHOST, 0);
+			curl_multi_add_handle($mh, $curly[$id]);
 		}
 
 		$running = null;
 		do {
-		curl_multi_exec($mh, $running);
+			curl_multi_exec($mh, $running);
 		} while($running > 0);
 
 		foreach($curly as $id => $c) {
-		$result[$id] = curl_multi_getcontent($c);
-		curl_multi_remove_handle($mh, $c);
+			$result[$id] = curl_multi_getcontent($c);
+			curl_multi_remove_handle($mh, $c);
 		}
 		curl_multi_close($mh);
 		return $result;
