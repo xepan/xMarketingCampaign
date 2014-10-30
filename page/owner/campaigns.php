@@ -31,7 +31,7 @@ class page_xMarketingCampaign_page_owner_campaigns extends page_componentBase_pa
 			return $category_campaign_model->count();
 		})->type('boolean');
 
-		$grid->setModel($cat_model,array('name','status'));
+		$grid->setModel($cat_model,array('name','is_associate','status'));
 		$grid->addColumn('Button','save','Swap Select');
 
 		if($_GET['save']){

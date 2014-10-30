@@ -236,7 +236,7 @@ class Controller_DataGrabberExec extends \AbstractController {
 
 			$start = microtime(true);
 			$results = $this->multi_request($unique_filtered_links);
-			// echo "Fetched ". count($unique_filtered_links).  " in ". (microtime(true) - $start) . ' seconds <br/>';
+			echo "Fetched ". count($unique_filtered_links).  " websites in ". (microtime(true) - $start) . ' seconds <br/>';
 
 			$contact_us_pages =array();
 			foreach ($unique_filtered_links as $id => $site_url) {
@@ -285,7 +285,7 @@ class Controller_DataGrabberExec extends \AbstractController {
 
 			$start = microtime(true);
 			$results = $this->multi_request($contact_us_pages);
-			// echo "Fetched ". count($contact_us_pages).  " in ". (microtime(true) - $start) . ' seconds <br/>';
+			echo "Fetched ". count($contact_us_pages).  " contact-pages in ". (microtime(true) - $start) . ' seconds <br/>';
 
 			foreach ($results as $id => $contact_page_content) {
 				if(!$results[$id]){
