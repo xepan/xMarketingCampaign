@@ -25,7 +25,8 @@ class Model_Config extends \Model_Table {
 		$this->addField('sender_name');
 		$this->addField('smtp_auto_reconnect')->type('int')->hint('Auto Reconnect by n number of emails');
 		$this->addField('email_threshold')->type('int')->hint('Threshold To send emails with this Email Configuration PER MINUTE');
-		$this->addField('use_for_domains')->hint('Reserver This Configuration for emails from the domains like "gmail,yahoo,live,hotmail,aol"');
+		$this->addField('emails_in_BCC')->type('int')->hint('Emails to be sent by bunch of Bcc emails, to will be used same as From, 0 to send each email in to field');
+		$this->addField('use_for_domains')->hint('Reserver This Configuration for emails from the domains like "gmail,yahoo,live,hotmail,aol"')->system(true); // Not implemented yet, todo
 		$this->addField('is_active')->type('boolean')->defaultValue(true);
 		// $this->addField('matter')->type('text')->display(array('form'=>'RichText'))->defaultValue('<p></p>');
 			

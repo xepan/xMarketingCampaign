@@ -81,6 +81,7 @@ class Controller_DataGrabberExec extends \AbstractController {
 			// echo "<iframe id='xyz' src='$url' width='100%' height='800px'></iframe>";
 			// return;
 			$content = @file_get_contents($url);
+			sleep(2);
 		}
 
 		$content_parsed ='';

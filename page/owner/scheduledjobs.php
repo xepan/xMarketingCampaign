@@ -19,6 +19,12 @@ class page_xMarketingCampaign_page_owner_scheduledjobs extends page_componentBas
 			return $m->refSQL('xEnquiryNSubscription/EmailQueue')->addCondition('is_sent',false)->count();
 		});
 
+		$btn= $this->add('Button')->set('Execute Sending Emails Now');
+		
+		if($btn->isClicked()){
+			$this->js()->univ()->frameURL('Sending Emails ... Do not close this frame, unless specified',$this->api->url('xMarketingCampaign_page_emailexec'))->execute();
+		}
+
 		$grid = $this->add('Grid');
 		$grid->setModel($jobs_model);
 
