@@ -44,7 +44,7 @@ class Model_DataGrabber extends \Model_Table{
 
 
 		$this->addCondition('epan_id',$this->api->current_website->id);
-		$this->add('dynamic_model/Controller_AutoCreator');
+		// $this->add('dynamic_model/Controller_AutoCreator');
 
 	}
 

@@ -80,6 +80,10 @@ class page_xMarketingCampaign_page_emailexec extends Page{
 		  ->setReplyTo(array('support@xepan.org' => 'xEpan Support Center'))
 		  ;
 
+		  if($email_setting_for_this_minute['return_path']){
+		  	$message->setReturnPath($email_setting_for_this_minute['return_path']);
+		  }
+
 		$email_body = $news_letter['matter'];
 		$email_body = $this->convertImagesInline($message,$email_body);
 
@@ -97,7 +101,12 @@ class page_xMarketingCampaign_page_emailexec extends Page{
 		  	$message->setBody($email_body,'text/html');
 
 		  	// $start = microtime(true);
-			$sent += $mailer->send($message, $failed);
+			$sent_this =  $mailer->send($message, $failed);
+			if(!$sent_this){
+				$email_queue->ref('subscriber_id')->set('is_bounced',true)->save();
+			}else{
+				$sent += $sent_this;
+			}
 			// echo "Sent $i th email in ". (microtime(true) - $start) . ' seconds <br/>';
 
 			$email_queue['is_sent']=true;

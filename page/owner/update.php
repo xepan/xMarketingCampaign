@@ -10,8 +10,21 @@ class page_xMarketingCampaign_page_owner_update extends page_componentBase_page_
 		// 
 		// Code To run before update
 		
-		$this->update($dynamic_model_update=true); // All modls will be dynamic executed in here
-		
+		$this->update($dynamic_model_update=false); // All modls will be dynamic executed in here
+		$model_array=array(
+			'Model_Campaign',
+			'Model_CampaignNewsLetter',
+			'Model_CampaignSubscriptionCategory',
+			'Model_Config',
+			'Model_DataGrabber',
+			'Model_DataSearchPhrase'
+			);
+
+		foreach ($model_array as $md) {
+			$model = $this->add('xMarketingCampaign/'.$md);
+			$model->add('dynamic_model/Controller_AutoCreator');
+			$model->tryLoadAny();
+		}
 		// Code to run after update
 	}
 }

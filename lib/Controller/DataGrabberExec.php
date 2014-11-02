@@ -17,6 +17,8 @@ class Controller_DataGrabberExec extends \AbstractController {
 	function init(){
 		parent::init();
 
+		$this->owner->add('View_Info')->set('To Stop Auto Calling, Just Close this frame, But current runnig thred will not be terminated');
+
 		$what_dtgrb_instance = $this->add('xMarketingCampaign/Model_DataGrabber');
 		$what_dtgrb_instance->addCondition('is_active',true);
 		$what_dtgrb_instance->_dsql()->having('is_runnable',1);
@@ -43,7 +45,7 @@ class Controller_DataGrabberExec extends \AbstractController {
 
 		if($phrase_to_run==null or ($phrase_to_run and !$phrase_to_run->loaded())){
 			$this->owner->add('View_Info')->set('Nothing to run');
-			$this->owner->js(true)->univ()->setTimeout($this->owner->js()->reload()->_enclose(),5);
+			$this->owner->js(true)->reload();
 			return;
 		}
 		
@@ -172,7 +174,7 @@ class Controller_DataGrabberExec extends \AbstractController {
 		echo "<h3>Found " . count($found_emails). " Emails in this shot </h3>";
 		// print_r($this->grabbed_data);
 		$this->owner->add('View')->set('Done ' . $phrase_name);
-		$this->owner->js(true)->univ()->setTimeout($this->owner->js()->reload()->_enclose(),5);
+		$this->owner->js(true)->univ()->setTimeout($this->owner->js()->reload(array('next_call'=>$call_field->js()->val()))->_enclose(),5);
 	}
 
 	// Url and its fetched_content

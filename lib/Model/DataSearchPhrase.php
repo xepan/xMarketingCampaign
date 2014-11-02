@@ -28,7 +28,7 @@ class Model_DataSearchPhrase extends \Model_Table{
 
 		$this->addHook('beforeSave',$this);
 
-		$this->add('dynamic_model/Controller_AutoCreator');
+		// $this->add('dynamic_model/Controller_AutoCreator');
 
 	}
 
