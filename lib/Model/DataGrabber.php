@@ -44,13 +44,13 @@ class Model_DataGrabber extends \Model_Table{
 
 
 		$this->addCondition('epan_id',$this->api->current_website->id);
-		$this->add('dynamic_model/Controller_AutoCreator');
+		// $this->add('dynamic_model/Controller_AutoCreator');
 
 	}
 
 
 	function beforeSave(){
 		$this['last_run_at'] = date('Y-m-d H:i:s');
-		if(!$this['required_pause_between_hits'] or $this['required_pause_between_hits'] < 10) $this['required_pause_between_hits'] = 10;
+		// if(!$this['required_pause_between_hits'] or $this['required_pause_between_hits'] < 10) $this['required_pause_between_hits'] = 10;
 	}
 }

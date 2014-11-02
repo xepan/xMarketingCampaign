@@ -15,8 +15,8 @@ class Model_DataSearchPhrase extends \Model_Table{
 
 		$this->addField('content_provided')->type('longtext')->display(array('grid'=>'shorttext','form'=>'text'))->hint('Html to parsed, no need to fetch url');
 		$this->addField('max_record_visit')->hint('How many search results to visit');
-		$this->addField('max_domain_depth')->hint('No of domains to hop from result websites');
-		$this->addField('max_page_depth')->hint('Depth Of pages in websites');
+		$this->addField('max_domain_depth')->hint('No of domains to hop from result websites')->defaultValue(1)->system(true);
+		$this->addField('max_page_depth')->hint('Depth Of pages in websites')->defaultValue(2)->system(true);
 
 		$this->addField('is_active')->type('boolean')->defaultValue(true);
 
@@ -24,9 +24,11 @@ class Model_DataSearchPhrase extends \Model_Table{
 		$this->addField('page_parameter_max_value')->system(false);
 		$this->addField('last_page_checked_at')->type('datetime')->system(false);
 
+		
+
 		$this->addHook('beforeSave',$this);
 
-		$this->add('dynamic_model/Controller_AutoCreator');
+		// $this->add('dynamic_model/Controller_AutoCreator');
 
 	}
 

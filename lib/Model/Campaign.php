@@ -21,6 +21,6 @@ class Model_Campaign extends \Model_Table {
 		// $this->addField('matter')->type('text')->display(array('form'=>'RichText'))->defaultValue('<p></p>');
 		$this->hasMany('xMarketingCampaign/CampaignSubscriptionCategory','campaign_id');
 
-		$this->add('dynamic_model/Controller_AutoCreator');
+		// $this->add('dynamic_model/Controller_AutoCreator');
 	}
 }
