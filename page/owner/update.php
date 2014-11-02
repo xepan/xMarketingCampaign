@@ -25,6 +25,7 @@ class page_xMarketingCampaign_page_owner_update extends page_componentBase_page_
 			$model->add('dynamic_model/Controller_AutoCreator');
 			$model->tryLoadAny();
 		}
+		$this->add('View_Info')->set('Component Updated Successfully');
 		// Code to run after update
 	}
 }
