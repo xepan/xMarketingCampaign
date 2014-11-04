@@ -174,7 +174,7 @@ class Controller_DataGrabberExec extends \AbstractController {
 		echo "<h3>Found " . count($found_emails). " Emails in this shot </h3>";
 		// print_r($this->grabbed_data);
 		$this->owner->add('View')->set('Done ' . $phrase_name);
-		$this->owner->js(true)->univ()->setTimeout($this->owner->js()->reload(array('next_call'=>$call_field->js()->val()))->_enclose(),5);
+		$this->owner->js(true)->reload();
 	}
 
 	// Url and its fetched_content
