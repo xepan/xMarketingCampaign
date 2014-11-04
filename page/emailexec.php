@@ -30,8 +30,15 @@ class page_xMarketingCampaign_page_emailexec extends Page{
 		$email_setting_for_this_minute->setOrder('remaining_emails_in_this_minute','desc');
 		$email_setting_for_this_minute->tryLoadAny();
 
+		if($email_setting_for_this_minute->loaded() and !$_GET['start_next']){
+			$this->add('H3')->set('Running Next');
+			$this->js(true)->reload(array('start_next'=>1));
+			return;
+		}
+
 		if(!$email_setting_for_this_minute->loaded()){
 			$this->add('View_Error')->set('All Email Server Used for this minute, Trying a bit later');
+			$this->js(true)->reload();
 			return;
 		}
 
@@ -40,7 +47,14 @@ class page_xMarketingCampaign_page_emailexec extends Page{
 		$email_queue = $this->add('xEnquiryNSubscription/Model_EmailQueue');
 		$email_queue->addCondition('emailjobs_id',$email_job->id);
 		$email_queue->addCondition('is_sent',false);
+		
+		$email_queue->addCondition('subscriber','not like',"%@gmail.");
+		$email_queue->addCondition('subscriber','not like',"%@yahoo.");
+		$email_queue->addCondition('subscriber','not like',"%@aol.");
+		$email_queue->addCondition('subscriber','not like',"%@live.");
+		$email_queue->addCondition('subscriber','not like',"%@hotmail.");
 		$email_queue->setLimit($email_setting_for_this_minute['remaining_emails_in_this_minute']);
+
 
 		echo "Email Setting taken " . $email_setting_for_this_minute['email_username'];
 
@@ -97,7 +111,11 @@ class page_xMarketingCampaign_page_emailexec extends Page{
 
 		  	$email_body = str_replace("{{email}}", $to_email, $email_body);
 
-		  	$message->setTo($to_email);
+		  	try{
+		  		$message->setTo($to_email);
+		  	}catch(Exception $e){
+		  		// continue;
+		  	}
 		  	$message->setBody($email_body,'text/html');
 
 		  	// $start = microtime(true);
@@ -129,6 +147,8 @@ class page_xMarketingCampaign_page_emailexec extends Page{
 			$this->add('View_Info')->set($sent.' Emailes Sent');
 		else
 			$this->add('View_Error');
+
+		$this->js(true)->reload();
 
 	}
 
