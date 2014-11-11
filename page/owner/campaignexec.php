@@ -35,6 +35,7 @@ class page_xMarketingCampaign_page_owner_campaignexec extends page_componentBase
 		$news_letters_model->addCondition('ending_date','>', date('Y-m-d H:i:s'));
 
 		foreach ($news_letters_model as $junk) {
+			$sent_to=array();
 			if($news_letters_model['effective_start_date'] == 'CampaignDate' AND  strtotime($news_letters_model['efective_date']) < strtotime($this->today) ) continue;
 			// Get all categories of xEnq Subscription to check subscriptions
 			$campain_categories = $this->add('xMarketingCampaign/Model_CampaignSubscriptionCategory');
@@ -49,6 +50,7 @@ class page_xMarketingCampaign_page_owner_campaignexec extends page_componentBase
 				$email_job = $m->add('xEnquiryNSubscription/Model_EmailJobs',array('table_alias'=>'ej'));
 				$email_que_j = $email_job->join('xEnquiryNSubscription_EmailQueue.emailjobs_id');
 				$email_que_j->addField('subscriber_id');
+
 				$email_job->addCondition('subscriber_id',$q->getField('id'));
 				$email_job->addCondition('newsletter_id',$junk['newsletter_id']);
 				return $email_job->count();
@@ -76,9 +78,13 @@ class page_xMarketingCampaign_page_owner_campaignexec extends page_componentBase
 					$new_email_job->save();
 				}
 
+				if(in_array($candidate_subscribers['email'], $sent_to)) continue;
+
 				$q['subscriber_id'] = $candidate_subscribers->id;
 				$q['emailjobs_id'] = $new_email_job->id;
 				$q->saveAndUnload();
+
+				$sent_to[] = $candidate_subscribers['email'];
 
 				$i=1;
 				
