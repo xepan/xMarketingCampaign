@@ -48,11 +48,11 @@ class page_xMarketingCampaign_page_emailexec extends Page{
 		$email_queue->addCondition('emailjobs_id',$email_job->id);
 		$email_queue->addCondition('is_sent',false);
 		
-		$email_queue->addCondition('subscriber','not like',"%@gmail.");
-		$email_queue->addCondition('subscriber','not like',"%@yahoo.");
-		$email_queue->addCondition('subscriber','not like',"%@aol.");
-		$email_queue->addCondition('subscriber','not like',"%@live.");
-		$email_queue->addCondition('subscriber','not like',"%@hotmail.");
+		// $email_queue->addCondition('subscriber','not like',"%@gmail.");
+		// $email_queue->addCondition('subscriber','not like',"%@yahoo.");
+		// $email_queue->addCondition('subscriber','not like',"%@aol.");
+		// $email_queue->addCondition('subscriber','not like',"%@live.");
+		// $email_queue->addCondition('subscriber','not like',"%@hotmail.");
 		$email_queue->setLimit($email_setting_for_this_minute['remaining_emails_in_this_minute']);
 
 
@@ -91,7 +91,7 @@ class page_xMarketingCampaign_page_emailexec extends Page{
 
 		$message = Swift_Message::newInstance($news_letter['email_subject'])
 		  ->setFrom(array($email_setting_for_this_minute['sender_email'] => $email_setting_for_this_minute['sender_name']))
-		  ->setReplyTo(array('support@xepan.org' => 'xEpan Support Center'))
+		  ->setReplyTo(array($email_setting_for_this_minute['email_reply_to'] => $email_setting_for_this_minute['email_reply_to_name']))
 		  ;
 
 		  if($email_setting_for_this_minute['return_path']){
