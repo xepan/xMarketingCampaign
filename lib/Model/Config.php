@@ -32,8 +32,8 @@ class Model_Config extends \Model_Table {
 		$this->addField('use_for_domains')->hint('Reserver This Configuration for emails from the domains like "gmail,yahoo,live,hotmail,aol"')->system(true); // Not implemented yet, todo
 		$this->addField('is_active')->type('boolean')->defaultValue(true);
 
-		$this->addField('last_engaged_at')->type('datetime')->system(true);
-		$this->addField('email_sent_in_this_minute')->type('int')->system(true);
+		$this->addField('last_engaged_at')->type('datetime')->system(true)->defaultValue(date('Y-m-md'));
+		$this->addField('email_sent_in_this_minute')->type('int')->system(true)->defaultValue(0);
 
 		// $this->addField('matter')->type('text')->display(array('form'=>'RichText'))->defaultValue('<p></p>');
 			
