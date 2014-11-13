@@ -9,8 +9,10 @@ class page_xMarketingCampaign_page_owner_campaigns extends page_componentBase_pa
 		$Campaign_crud->setModel('xMarketingCampaign/Campaign',array('name','starting_date','ending_date','effective_start_date','is_active'));
 		if($Campaign_crud->grid){
 			$Campaign_crud->grid->addColumn('expander','AddEmails','Add Subscription Category');
-			$Campaign_crud->grid->addColumn('expander','NewsLetterSubCampaign');
-			$Campaign_crud->grid->addButton('Campaign Exec')->js('click')->univ()->frameURL('Campaign Executing',$this->api->url('xMarketingCampaign_page_owner_campaignexec'));
+			$Campaign_crud->grid->addColumn('expander','NewsLetterSubCampaign','News Letters To send');
+			$Campaign_crud->grid->addColumn('expander','social_campaigns','Social Posts To Include');
+			$Campaign_crud->grid->addButton('Schedule Emails Now')->js('click')->univ()->frameURL('Campaign Executing',$this->api->url('xMarketingCampaign_page_owner_campaignexec'));
+			
 			// $Campaign_crud->grid->addColumn('expander','BlogSubCampaign');
 		}
 
@@ -56,6 +58,17 @@ class page_xMarketingCampaign_page_owner_campaigns extends page_componentBase_pa
 		$crud = $this->add('CRUD');
 		$crud->setModel($campaign_newsletter_model);
 
+	}
+
+	function page_social_campaigns(){
+		$campaign_id = $this->api->StickyGET('xmarketingcampaign_campaigns_id');
+		$campaign_socialpost_model = $this->add('xMarketingCampaign/Model_CampaignSocialPost');
+		$campaign_socialpost_model->addCondition('campaign_id',$campaign_id);
+		$crud = $this->add('CRUD');
+		$crud->setModel($campaign_socialpost_model);
+		if($crud->form){
+			$crud->form->getElement('socialpost_id')->setEmptyText('Please Select Post to Post');
+		}
 	}
 
 

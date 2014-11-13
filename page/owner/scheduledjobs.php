@@ -52,5 +52,15 @@ class page_xMarketingCampaign_page_owner_scheduledjobs extends page_componentBas
 
 	function page_social(){
 
+		$btn= $this->add('Button')->set('Execute Posting Posts Now');
+		
+		if($btn->isClicked()){
+			$this->js()->univ()->frameURL('Posting Social ... Do not close this frame, unless specified',$this->api->url('xMarketingCampaign_page_socialexec'))->execute();
+		}
+
+		$model = $this->add('xMarketingCampaign/Model_CampaignSocialPost');
+		$grid = $this->add('Grid');
+		$grid->setModel($model);
+
 	}
 }

@@ -7,10 +7,10 @@ class page_xMarketingCampaign_page_owner_campaignexec extends page_componentBase
 	function init(){
 		parent::init();
 
-		$this->today  =date('Y-m-d');
+		$this->today  = date('Y-m-d');
+
 		if($_GET['today']){
 			$this->today=$_GET['today'];
-			
 		}
 
 		$this->emailExec();
@@ -93,4 +93,5 @@ class page_xMarketingCampaign_page_owner_campaignexec extends page_componentBase
 		}
 
 	}
+
 }		

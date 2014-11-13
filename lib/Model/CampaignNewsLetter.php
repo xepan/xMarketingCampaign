@@ -15,7 +15,7 @@ class Model_CampaignNewsLetter extends \Model_Table {
 		$this->hasOne('xMarketingCampaign/Campaign','campaign_id')->defaultValue('Null')->mandatory(true);
 		$this->hasOne('xEnquiryNSubscription/NewsLetter','newsletter_id')->defaultValue('Null')->mandatory(true);
 
-		$this->addField('post_to_socials')->type('boolean')->defaultValue(false);
+		// $this->addField('post_to_socials')->type('boolean')->defaultValue(false);
 		$this->addField('duration')->hint('duration in days')->type('Number');
 
 		$this->addHook('beforeSave',$this);
