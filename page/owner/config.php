@@ -26,10 +26,10 @@ class page_xMarketingCampaign_page_owner_config extends page_componentBase_page_
         		if (filetype($plug_path.DS.$object) != "dir"){
         			$object = str_replace(".php", "", $object);
         			$t=$tabs->addTab($object);
-        			$login_status_view =$t->add('View');
+        			// $login_status_view =$t->add('View');
         			$social = $t->add('xMarketingCampaign/Controller_SocialPosters_'.$object);
         			$social->config_page();
-        			$login_status_view->setHTML($object. ' - '. $social->login_status());
+        			// $login_status_view->setHTML($object. ' - '. $social->login_status());
         		}
     		}
     	}
