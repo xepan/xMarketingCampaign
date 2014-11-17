@@ -13,12 +13,12 @@ class Model_SocialPost extends \Model_Table {
 
 		$this->addField('name');
 
-		$field_title = $this->addField('post_title');
+		$field_title = $this->addField('post_title')->display(array('grid'=>'shorttext,wrap'));
 		$field_url = $this->addField('url');
 		$field_image = $this->addField('image')->display(array('form'=>'ElImage'));
 		
 		$field_160 = $this->addField('message_160_chars');
-		$field_255 = $this->addField('message_255_chars');
+		$field_255 = $this->addField('message_255_chars')->display(array('grid'=>'shorttext,wrap'));
 		$field_3000 = $this->addField('message_3000_chars')->type('text');
 		$field_blog = $this->addField('message_blog')->type('text')->display(array('form'=>'RichText'));
 
