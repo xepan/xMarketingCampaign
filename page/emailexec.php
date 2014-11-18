@@ -14,6 +14,9 @@ class page_xMarketingCampaign_page_emailexec extends Page{
 
 		$email_job->addCondition('un_processed_job','>',0);
 		$email_job->setOrder('job_posted_at','asc');
+
+		$email_job->addCondition('process_via','xMarketingCampaign');
+
 		$email_job->tryLoadAny();
 
 		if(!$email_job->loaded()){
@@ -30,6 +33,8 @@ class page_xMarketingCampaign_page_emailexec extends Page{
 		$email_setting_for_this_minute->setOrder('remaining_emails_in_this_minute','desc');
 		$email_setting_for_this_minute->tryLoadAny();
 
+		// Visual patch
+		// send start_next=1 from cron url always
 		if($email_setting_for_this_minute->loaded() and !$_GET['start_next']){
 			$this->add('H3')->set('Running Next');
 			$this->js(true)->reload(array('start_next'=>1));
@@ -121,7 +126,8 @@ class page_xMarketingCampaign_page_emailexec extends Page{
 		  	// $start = microtime(true);
 			$sent_this =  $mailer->send($message, $failed);
 			if(!$sent_this){
-				$email_queue->ref('subscriber_id')->set('is_bounced',true)->save();
+				// This is not actually bounced. keep it a separate portion
+				// $email_queue->ref('subscriber_id')->set('is_bounced',true)->save();
 			}else{
 				$sent += $sent_this;
 			}

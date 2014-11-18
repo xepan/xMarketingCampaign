@@ -46,6 +46,9 @@ class page_xMarketingCampaign_page_owner_campaignexec extends page_componentBase
 			}
 
 			$candidate_subscribers = $this->add('xEnquiryNSubscription/Model_Subscription');
+			$asso_j = $candidate_subscribers->join('xEnquiryNSubscription_SubsCatAss.subscriber_id');
+			$asso_j->addField('subscribed_on');
+
 			$candidate_subscribers->addExpression('is_this_newsletter_sent')->set(function($m,$q)use($junk){
 				$email_job = $m->add('xEnquiryNSubscription/Model_EmailJobs',array('table_alias'=>'ej'));
 				$email_que_j = $email_job->join('xEnquiryNSubscription_EmailQueue.emailjobs_id');
@@ -65,16 +68,24 @@ class page_xMarketingCampaign_page_owner_campaignexec extends page_componentBase
 			}
 
 			$candidate_subscribers->addCondition('age_of_registration','>=',$news_letters_model['duration']);
-			$candidate_subscribers->addCondition('category_id',$categories);
 			$candidate_subscribers->addCondition('is_this_newsletter_sent',0);
+			
+			$asso_j = $candidate_subscribers->join('xEnquiryNSubscription_SubsCatAss.subscriber_id');
+			$asso_j->addField('category_id');
+			$asso_j->addField('send_news_letters');
+
+			$candidate_subscribers->addCondition('category_id',$categories);
+			$candidate_subscribers->addCondition('send_news_letters',true);
 
 			$i=0;
 			$q=$this->add('xEnquiryNSubscription/Model_EmailQueue');
-			foreach ($candidate_subscribers->debug() as $junk) {
+			foreach ($candidate_subscribers as $junk) {
 				if($i==0){
 					$new_email_job = $this->add('xEnquiryNSubscription/Model_EmailJobs');
 					$new_email_job['newsletter_id'] = $news_letters_model['newsletter_id'];
 					$new_email_job['job_posted_at'] = $this->today;
+					$new_email_job['process_via'] = 'xMarketingCampaign';
+
 					$new_email_job->save();
 				}
 

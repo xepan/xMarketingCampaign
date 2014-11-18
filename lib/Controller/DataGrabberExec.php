@@ -160,16 +160,26 @@ class Controller_DataGrabberExec extends \AbstractController {
 			}
 		}
 
+		$category=  $this->add('xEnquiryNSubscription/Model_SubscriptionCategories');
+		$category->load($subscription_category_id);
+
 		foreach ($found_emails as $email) {
 			$subscription_save = $this->add('xEnquiryNSubscription/Model_Subscription');
 			$subscription_save->addCondition('email',$email);
-			$subscription_save->addCondition('category_id',$subscription_category_id);
-			$subscription_save->addCondition('from_app','DataGrabberPhrase');
-			$subscription_save->addCondition('from_id',$phrase_to_run_id);
 			$subscription_save->tryLoadAny();
-			if(!$subscription_save->loaded()) $subscription_save->save();
+			
+			
+			if(!$subscription_save->loaded()){
+				$subscription_save['from_app']='DataGrabberPhrase';
+				$subscription_save['from_id']=$phrase_to_run_id;
+				$subscription_save->save();	
+			}
+			
+			$category->addSubscriber($subscription_save);
+
 			$subscription_save->destroy();
 		}
+
 		echo "<h1> RESULT : </h1>";
 		echo "<h3>Found " . count($found_emails). " Emails in this shot </h3>";
 		// print_r($this->grabbed_data);
