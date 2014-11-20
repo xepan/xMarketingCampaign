@@ -82,6 +82,7 @@ class Controller_SocialPosters_Facebook extends Controller_SocialPosters_Base_So
 	function config_page(){
 		$c=$this->owner->add('CRUD',array('allow_add'=>false,'allow_del'=>false));
 		$c->setModel('xMarketingCampaign/FacebookConfig');
+		$c->add('Controller_FormBeautifier');
 	}
 
 	function post($params){ // all social post row as hash array

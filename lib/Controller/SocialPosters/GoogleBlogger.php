@@ -185,5 +185,6 @@ class Controller_SocialPosters_GoogleBlogger extends Controller_SocialPosters_Ba
 	function config_page(){
 		$c=$this->owner->add('CRUD',array('allow_add'=>false,'allow_del'=>false));
 		$c->setModel('xMarketingCampaign/GoogleBloggerConfig');
+		$c->add('Controller_FormBeautifier');
 	}
 }

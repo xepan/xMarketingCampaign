@@ -11,17 +11,26 @@ class page_xMarketingCampaign_page_owner_campaigns extends page_componentBase_pa
 			$Campaign_crud->grid->addColumn('expander','AddEmails','Add Subscription Category');
 			$Campaign_crud->grid->addColumn('expander','NewsLetterSubCampaign','News Letters To send');
 			$Campaign_crud->grid->addColumn('expander','social_campaigns','Social Posts To Include');
-			$Campaign_crud->grid->addButton('Schedule Emails Now')->js('click')->univ()->frameURL('Campaign Executing',$this->api->url('xMarketingCampaign_page_owner_campaignexec'));
+			$btn=$Campaign_crud->grid->addButton('Schedule Emails Now');
+			$btn->setIcon('ui-icon-seek-end');
+			$btn->js('click')->univ()->frameURL('Campaign Executing',$this->api->url('xMarketingCampaign_page_owner_campaignexec'));
 			
+			$Campaign_crud->add_button->setIcon('ui-icon-plusthick');
 			// $Campaign_crud->grid->addColumn('expander','BlogSubCampaign');
 		}
+
+		$Campaign_crud->add('Controller_FormBeautifier');
 
 	}	
 
 	function page_AddEmails(){
 		$campaign_id = $this->api->StickyGET('xmarketingcampaign_campaigns_id');
-		$this->add('View_Info')->set('Add Emails to Campaign');
-		$grid = $this->add('Grid');
+
+		$v=$this->add('View');
+		$v->addClass('panel panel-default');
+		$v->setStyle('padding','20px');
+		
+		$grid = $v->add('Grid');
 
 		$cat_model = $this->add('xEnquiryNSubscription/Model_SubscriptionCategories');
 		$cat_model->addCondition('is_active',true);
@@ -51,23 +60,45 @@ class page_xMarketingCampaign_page_owner_campaigns extends page_componentBase_pa
 	}	
 
 	function page_NewsLetterSubCampaign(){
-
 		$campaign_id = $this->api->StickyGET('xmarketingcampaign_campaigns_id');
+
+		$v=$this->add('View');
+		$v->addClass('panel panel-default');
+		$v->setStyle('padding','20px');
+
 		$campaign_newsletter_model = $this->add('xMarketingCampaign/Model_CampaignNewsLetter');
 		$campaign_newsletter_model->addCondition('campaign_id',$campaign_id);
-		$crud = $this->add('CRUD');
+
+		$crud = $v->add('CRUD');
 		$crud->setModel($campaign_newsletter_model);
+		
+		$crud->add('Controller_FormBeautifier');
+		
+		if($crud->grid){
+			$crud->add_button->setIcon('ui-icon-plusthick');
+		}
 
 	}
 
 	function page_social_campaigns(){
 		$campaign_id = $this->api->StickyGET('xmarketingcampaign_campaigns_id');
+		
+		$v=$this->add('View');
+		$v->addClass('panel panel-default');
+		$v->setStyle('padding','20px');
+
 		$campaign_socialpost_model = $this->add('xMarketingCampaign/Model_CampaignSocialPost');
 		$campaign_socialpost_model->addCondition('campaign_id',$campaign_id);
-		$crud = $this->add('CRUD');
+		$crud = $v->add('CRUD');
 		$crud->setModel($campaign_socialpost_model);
 		if($crud->form){
 			$crud->form->getElement('socialpost_id')->setEmptyText('Please Select Post to Post');
+		}
+
+		$crud->add('Controller_FormBeautifier');
+		
+		if($crud->grid){
+			$crud->add_button->setIcon('ui-icon-plusthick');
 		}
 	}
 

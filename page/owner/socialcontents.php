@@ -20,6 +20,10 @@ class page_xMarketingCampaign_page_owner_socialcontents extends page_componentBa
 
 		$crud->setModel($social_model);
 		
+		$crud->add('Controller_FormBeautifier');
+		if($crud->grid){
+			$crud->add_button->setIcon('ui-icon-plusthick');
+		}
 
 	}
 }		

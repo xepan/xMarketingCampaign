@@ -11,20 +11,25 @@ class Model_SocialPost extends \Model_Table {
 		$this->hasOne('Epan','epan_id');
 		$this->addCondition('epan_id',$this->api->current_website->id);
 
-		$this->addField('name');
+		$f=$this->addField('name')->mandatory(true)->group('a~10');
+		$f->icon='fa fa-adn~red';
+		$f=$this->addField('is_active')->type('boolean')->defaultValue(true)->group('a~2');
+		$f->icon='fa fa-exclamation~blue';
 
-		$field_title = $this->addField('post_title')->display(array('grid'=>'shorttext,wrap'));
-		$field_url = $this->addField('url');
-		$field_image = $this->addField('image')->display(array('form'=>'ElImage'));
+		$f=$field_title = $this->addField('post_title')->display(array('grid'=>'shorttext,wrap'))->group('b~12~<i class="fa fa-share-alt"></i> The Post')->mandatory(true);
+		$f->icon ='fa fa-header~red';
+		$f=$field_url = $this->addField('url')->group('b~12~bl');
+		$f->icon = 'fa fa-globe~blue';
+		$f=$field_image = $this->addField('image')->display(array('form'=>'ElImage'))->group('b~12~bl');
+		$f->icon='fa fa-image~blue';
 		
-		$field_160 = $this->addField('message_160_chars');
-		$field_255 = $this->addField('message_255_chars')->display(array('grid'=>'shorttext,wrap'));
-		$field_3000 = $this->addField('message_3000_chars')->type('text');
-		$field_blog = $this->addField('message_blog')->type('text')->display(array('form'=>'RichText'));
+		$f=$field_160 = $this->addField('message_160_chars')->group('c~12~<i class="fa fa-paragraph"></i> The Message');
+		$field_255 = $this->addField('message_255_chars')->display(array('grid'=>'shorttext,wrap'))->group('c~12~bl');
+		$field_3000 = $this->addField('message_3000_chars')->type('text')->group('c~12~bl');
+		$field_blog = $this->addField('message_blog')->type('text')->display(array('form'=>'RichText'))->group('c~12~bl');
 
-		$this->addField('post_leg_allowed')->hint('No of days allowed to delay post');
+		$this->addField('post_leg_allowed')->hint('No of days allowed to delay post')->system(true);
 
-		$this->addField('is_active')->type('boolean')->defaultValue(true);
 
 		// $this->addHook('beforeSave',$this);
 

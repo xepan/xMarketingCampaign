@@ -14,7 +14,7 @@ class page_xMarketingCampaign_page_owner_main extends page_componentBase_page_ow
 		$tabs->addTabUrl('xMarketingCampaign/page_owner_socialcontents','<i class="fa fa-share-alt-square"></i> Add SocialContent');
 		$tabs->addTabUrl('xMarketingCampaign/page_owner_campaigns','<i class="fa fa-calendar-o"></i> Campaigns');
 		$tabs->addTabUrl('xMarketingCampaign/page_owner_scheduledjobs','<i class="fa fa-tasks"></i> Scheduled Jobs');
-		$tabs->addTabUrl('xMarketingCampaign/page_owner_config','<i class="fa fa-cog"></i> Configuration');
+		$tabs->addTabUrl('xMarketingCampaign/page_owner_config','<i class="fa fa-cogs"></i> Configurations');
 
 	}
 
