@@ -17,7 +17,9 @@ class page_xMarketingCampaign_page_owner_update extends page_componentBase_page_
 			'Model_CampaignSubscriptionCategory',
 			'Model_Config',
 			'Model_DataGrabber',
-			'Model_DataSearchPhrase'
+			'Model_DataSearchPhrase',
+			'Model_SocialPost',
+			'Model_CampaignSocialPost'
 			);
 
 		foreach ($model_array as $md) {
