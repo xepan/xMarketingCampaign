@@ -13,23 +13,31 @@ class page_xMarketingCampaign_page_owner_scheduledjobs extends page_componentBas
 	}
 
 	function page_email(){
+		$btn= $this->add('Button')->set('Execute Sending Emails Now');
+		$btn->setIcon('ui-icon-seek-end');
+		
 		$jobs_model = $this->add('xEnquiryNSubscription/Model_EmailJobs');
+		$grid = $this->add('Grid');
 
 		$jobs_model->addExpression('pending_emails')->set(function($m,$q){
 			return $m->refSQL('xEnquiryNSubscription/EmailQueue')->addCondition('is_sent',false)->count();
 		});
 
-		$btn= $this->add('Button')->set('Execute Sending Emails Now');
-		$btn->setIcon('ui-icon-seek-end');
+		if($_GET['delete']){
+			$jobs_model->load($_GET['delete']);
+			$jobs_model->delete();
+			$grid->js()->reload()->execute();
+		}
+
 
 		if($btn->isClicked()){
 			$this->js()->univ()->frameURL('Sending Emails ... Do not close this frame, unless specified',$this->api->url('xMarketingCampaign_page_emailexec'))->execute();
 		}
 
-		$grid = $this->add('Grid');
 		$grid->setModel($jobs_model);
 
 		$grid->addColumn('expander','email_list');
+		$grid->addColumn('Button','delete');
 
 		$grid->addPaginator(100);
 		$grid->addQuickSearch(array('newsletter'));
