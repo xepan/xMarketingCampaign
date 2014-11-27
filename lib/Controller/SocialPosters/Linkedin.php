@@ -13,6 +13,8 @@ class Model_LinkedinConfig extends \Model_Table{
 		// $this->addField('userid_returned');
 		$this->addField('appId');
 		$this->addField('secret');
+		$this->addField('post_in_groups')->type('boolean')->defaultValue(true);
+		$this->addField('filter_repeated_posts')->type("boolean")->defaultValue(true)->caption('Filter Repeated Posts in Groups');
 		// $this->addField('access_token')->system(false);
 		// $this->addField('is_access_token_valid')->type('boolean')->defaultValue(false)->system(true);
 		$this->hasMany('xMarketingCampaign/LinkedinUsers','linkedin_config_id');
@@ -33,6 +35,8 @@ class Model_LinkedinUsers extends \Model_Table{
 		$this->addField('userid');
 		$this->addField('userid_returned');
 		$this->addField('access_token')->system(false)->type('text');
+		$this->addField('access_token_secret')->system(false)->type('text');
+		$this->addField('access_token_expiry')->system(false)->type('datetime');
 		$this->addField('is_access_token_valid')->type('boolean')->defaultValue(false)->system(true);
 		$this->addField('is_active')->type('boolean')->defaultValue(true);
 
@@ -150,7 +154,7 @@ class Controller_SocialPosters_Linkedin extends Controller_SocialPosters_Base_So
 		}
 
 		if($success){
-			// print_r($user);
+			print_r($this->client);
 
 			$fetched_url=$user->siteStandardProfileRequest->url;
 
@@ -165,8 +169,14 @@ class Controller_SocialPosters_Linkedin extends Controller_SocialPosters_Base_So
 
 			$li_user['name'] = $user->firstName;
 			$li_user['access_token'] = $this->client->access_token;
+			$li_user['access_token_secret'] = $this->client->access_token_secret;
+			$li_user['access_token_expiry'] = $this->client->access_token_expiry;
 			$li_user->save();
+			return true;
 		}
+		throw new \Exception("Error Processing Request", 1);
+		
+		return false;
 
 	}
 
@@ -191,20 +201,30 @@ class Controller_SocialPosters_Linkedin extends Controller_SocialPosters_Base_So
 	  	try{
 	  		$client = $this->client;
 	  		
-	  		$users=$this->config->ref('xMarketingCampaign/LinkedinUsers');
+	  		$users=$this->client_config->ref('xMarketingCampaign/LinkedinUsers');
 	  		$users->addCondition('is_active',true);
 
-	  		foreach ($users as $junk) {
+	  		$groups_posted=array();
 
-		  		$client->access_token = $users['access_token'];
+	  		if(!$client->Initialize())
+	  			echo "not init";
+
+	  		foreach ($users as $junk) {
+	  			
+	  			// $client->ResetAccessToken();
 		  		
-		  		if(!$client->Initialize())
-		  			echo "not init";
-		  		if(!$client->Process())
-		  			echo "not process";
+				$client->access_token = $users['access_token'];
+				$client->access_token_secret = $users['access_token_secret'];
+
+		  		// if(!$client->StoreAccessToken($users['access_token']))
+		  		// 	throw new \Exception("Could not store token", 1);
+				
+
+		  		// if(!$client->Process())
+		  		// 	echo "not process";
 				
 		  		
-		  		echo "posting to ". $client->access_token;
+		  		echo "posting to ". $users['access_token'];//$client->access_token;
 
 
 		  		// echo $parameters->content->{'submitted-image-url'};
@@ -239,42 +259,44 @@ class Controller_SocialPosters_Linkedin extends Controller_SocialPosters_Base_So
 					
 					// share on self status
 
-					$success = $client->CallAPI(
-					'http://api.linkedin.com/v1/people/~/shares',
-					'POST', $parameters, array('FailOnAccessError'=>true, 'RequestContentType'=>'application/json'), $user);
-					echo "<pre>";
+					$success = $client->CallAPI('http://api.linkedin.com/v1/people/~/shares','POST', $parameters, array('FailOnAccessError'=>true, 'RequestContentType'=>'application/json'), $user);
+					$success = $client->Finalize($success);
+					// echo "<pre>";
 
-					print_r($success);
+					// print_r($success);
 					// Share on all joined groups
 
-					// Get al lgroups
-					$success = $client->CallAPI(
-					'http://api.linkedin.com/v1/people/~/group-memberships',
-					'GET', null, array('FailOnAccessError'=>true, 'RequestContentType'=>'application/json'), $groups);
+					if($this->client_config['post_in_groups']){
+						// Get all groups
+						$success = $client->CallAPI('http://api.linkedin.com/v1/people/~/group-memberships','GET', null, array('FailOnAccessError'=>true, 'RequestContentType'=>'application/json'), $groups);
 
-					$groups =simplexml_load_string($groups);
-					$groups = json_encode($groups);
-					$groups = json_decode($groups,true);
-					print_r($groups['group-membership']);
-					$parameters->title = $parameters->content->title;
-					$parameters->summary = $parameters->comment;
+						$groups =simplexml_load_string($groups);
+						$groups = json_encode($groups);
+						$groups = json_decode($groups,true);
+						print_r($groups['group-membership']);
+						$parameters->title = $parameters->content->title;
+						$parameters->summary = $parameters->comment;
 
-					unset($parameters->visibility);
-					unset($parameters->comment);
+						unset($parameters->visibility);
+						unset($parameters->comment);
 
-					if(isset($groups['group-membership'])){
-						foreach ($groups['group-membership'] as $grp) {
-							// print_r($grp);
-							$grp_id= $grp['group']['id'];
-							echo $grp_id ."<br/>";
-
-							$success = $client->CallAPI(
-								'http://api.linkedin.com/v1/groups/'.$grp_id.'/posts',
-								'POST', $parameters, array('FailOnAccessError'=>true, 'RequestContentType'=>'application/json'), $groups);
+						if(isset($groups['group-membership'])){
+							foreach ($groups['group-membership'] as $grp) {
+								// print_r($grp);
+								$grp_id= $grp['group']['id'];
+								echo $grp_id ."<br/>";
+								if(!in_array($grp_id, $groups_posted) OR !$this->client_config['filter_repeated_posts']){
+									$success = $client->CallAPI(
+										'http://api.linkedin.com/v1/groups/'.$grp_id.'/posts',
+										'POST', $parameters, array('FailOnAccessError'=>true, 'RequestContentType'=>'application/json'), $groups);
+									$groups_posted[] = $grp_id;
+									$success = $client->Finalize($success);
+								}
+							}
 						}
 					}
-					echo "</pre>";
 
+					// echo "</pre>";
 
 				}
 
@@ -294,44 +316,53 @@ class Controller_SocialPosters_Linkedin extends Controller_SocialPosters_Base_So
 					$success = $client->CallAPI(
 					'http://api.linkedin.com/v1/people/~/person-activities',
 					'POST', $parameters, array('FailOnAccessError'=>true, 'RequestContentType'=>'application/json'), $user);
+					$success = $client->Finalize($success);
 
 					// Share on all joined groups
 
-					// Get al lgroups
-					$success = $client->CallAPI(
-					'http://api.linkedin.com/v1/people/~/group-memberships',
-					'GET', null, array('FailOnAccessError'=>true, 'RequestContentType'=>'application/json'), $groups);
-
-					$groups =simplexml_load_string($groups);
-					$groups = json_encode($groups);
-					$groups = json_decode($groups,true);
-					// echo "<pre>";
-					// print_r($groups['group-membership']);
-					$parameters->title = $parameters->content->title;
-					$parameters->summary = $parameters->comment;
-
-					unset($parameters->visibility);
-					unset($parameters->comment);
-
-					foreach ($groups['group-membership'] as $grp) {
-						// print_r($grp);
-						$grp_id= $grp['group']['id'];
-						echo $grp_id ."<br/>";
-
+					if($this->client_config['post_in_groups']){
+						// Get al lgroups
 						$success = $client->CallAPI(
-							'http://api.linkedin.com/v1/groups/'.$grp_id.'/posts',
-							'POST', $parameters, array('FailOnAccessError'=>true, 'RequestContentType'=>'application/json'), $groups);
-					}
-					// echo "</pre>";
+						'http://api.linkedin.com/v1/people/~/group-memberships',
+						'GET', null, array('FailOnAccessError'=>true, 'RequestContentType'=>'application/json'), $groups);
 
+						$groups =simplexml_load_string($groups);
+						$groups = json_encode($groups);
+						$groups = json_decode($groups,true);
+						// echo "<pre>";
+						// print_r($groups['group-membership']);
+						$parameters->title = $parameters->content->title;
+						$parameters->summary = $parameters->comment;
+
+						unset($parameters->visibility);
+						unset($parameters->comment);
+
+						foreach ($groups['group-membership'] as $grp) {
+							// print_r($grp);
+							$grp_id= $grp['group']['id'];
+							echo $grp_id ."<br/>";
+							if(!in_array($grp_id, $groups_posted)  OR !$this->client_config['filter_repeated_posts']){
+								$success = $client->CallAPI(
+									'http://api.linkedin.com/v1/groups/'.$grp_id.'/posts',
+									'POST', $parameters, array('FailOnAccessError'=>true, 'RequestContentType'=>'application/json'), $groups);
+								$groups_posted[] = $grp_id;
+								$success = $client->Finalize($success);
+							}
+						}
+
+					}
+					
+					// echo "</pre>";
 				}
 
-				$success = $client->Finalize($success);
 				
+				// echo $client->debug_output;
 				if(!$success){
 					$this->add('View_Error')->set('Error in '. $client->access_token);
 					continue;
 				}
+
+				$this->add('View_Info')->set($users['name'].' POsted in linked in');
 
 			}
 

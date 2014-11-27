@@ -15,6 +15,7 @@ class Model_GoogleBloggerConfig extends \Model_Table{
 		$this->addField('appId')->display(array('grid'=>'shorttext,wrap'));
 		$this->addField('secret');
 		$this->addField('access_token')->system(false)->type('text');
+		$this->addField('access_token_secret')->system(false)->type('text');
 		$this->addField('refresh_token')->system(false)->type('text');
 		$this->addField('is_access_token_valid')->type('boolean')->defaultValue(false)->system(true);
 		$this->addField('is_active')->type('boolean')->defaultValue(true);
@@ -132,7 +133,9 @@ class Controller_SocialPosters_GoogleBlogger extends Controller_SocialPosters_Ba
 
 		if($success){
 			// echo $this->client->access_token;
-			$this->client_config['access_token'] = $this->client->access_token;
+			$li_user['access_token'] = $this->client->access_token;
+			$li_user['access_token_secret'] = $this->client->access_token_secret;
+			$li_user['access_token_expiry'] = $this->client->access_token_expiry;
 			$this->client_config['refresh_token'] = $this->client->refresh_token;
 			$this->client_config->save();
 		}else{
@@ -153,6 +156,7 @@ class Controller_SocialPosters_GoogleBlogger extends Controller_SocialPosters_Ba
 	  			echo "not process";
 
 	  		$client->access_token = $this->client_config['access_token'];
+	  		$client->access_token_secret = $users['access_token_secret'];
 	  		
 	  		echo "posting to ". $client->access_token;
 

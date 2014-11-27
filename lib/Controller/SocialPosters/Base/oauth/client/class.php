@@ -97,7 +97,7 @@
 {/metadocument}
 */
 
-class oauth_client_class
+class oauth_client_class extends AbstractController
 {
 /*
 {metadocument}

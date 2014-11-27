@@ -73,8 +73,8 @@ class page_xMarketingCampaign_page_owner_scheduledjobs extends page_componentBas
 		}
 
 		$model = $this->add('xMarketingCampaign/Model_CampaignSocialPost');
-		$grid = $this->add('Grid');
-		$grid->setModel($model);
+		$crud = $this->add('CRUD');
+		$crud->setModel($model);
 
 	}
 }
