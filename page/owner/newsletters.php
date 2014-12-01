@@ -6,6 +6,7 @@ class page_xMarketingCampaign_page_owner_newsletters extends page_componentBase_
 		parent::init();
 
 		$newsletter_model = $this->add('xEnquiryNSubscription/Model_NewsLetter');
+
 		$crud = $this->add('CRUD');
 		$crud->setModel($newsletter_model,null,null);
 		$crud->add('Controller_FormBeautifier');
