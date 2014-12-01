@@ -154,7 +154,7 @@ class Controller_SocialPosters_Linkedin extends Controller_SocialPosters_Base_So
 		}
 
 		if($success){
-			print_r($this->client);
+			// print_r($this->client);
 
 			$fetched_url=$user->siteStandardProfileRequest->url;
 
@@ -286,11 +286,16 @@ class Controller_SocialPosters_Linkedin extends Controller_SocialPosters_Base_So
 								$grp_id= $grp['group']['id'];
 								echo $grp_id ."<br/>";
 								if(!in_array($grp_id, $groups_posted) OR !$this->client_config['filter_repeated_posts']){
-									$success = $client->CallAPI(
-										'http://api.linkedin.com/v1/groups/'.$grp_id.'/posts',
-										'POST', $parameters, array('FailOnAccessError'=>true, 'RequestContentType'=>'application/json'), $groups);
-									$groups_posted[] = $grp_id;
-									$success = $client->Finalize($success);
+									try{
+
+										$success = $client->CallAPI(
+											'http://api.linkedin.com/v1/groups/'.$grp_id.'/posts',
+											'POST', $parameters, array('FailOnAccessError'=>true, 'RequestContentType'=>'application/json'), $groups);
+										$groups_posted[] = $grp_id;
+										$success = $client->Finalize($success);
+									}catch(\Exception $e){
+										continue;
+									}
 								}
 							}
 						}
@@ -342,11 +347,15 @@ class Controller_SocialPosters_Linkedin extends Controller_SocialPosters_Base_So
 							$grp_id= $grp['group']['id'];
 							echo $grp_id ."<br/>";
 							if(!in_array($grp_id, $groups_posted)  OR !$this->client_config['filter_repeated_posts']){
-								$success = $client->CallAPI(
-									'http://api.linkedin.com/v1/groups/'.$grp_id.'/posts',
-									'POST', $parameters, array('FailOnAccessError'=>true, 'RequestContentType'=>'application/json'), $groups);
-								$groups_posted[] = $grp_id;
-								$success = $client->Finalize($success);
+								try{
+									$success = $client->CallAPI(
+										'http://api.linkedin.com/v1/groups/'.$grp_id.'/posts',
+										'POST', $parameters, array('FailOnAccessError'=>true, 'RequestContentType'=>'application/json'), $groups);
+									$groups_posted[] = $grp_id;
+									$success = $client->Finalize($success);
+								}catch(\Exception $e){
+									continue;
+								}
 							}
 						}
 

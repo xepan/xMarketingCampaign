@@ -250,8 +250,12 @@ class Controller_SocialPosters_Facebook extends Controller_SocialPosters_Base_So
 				  		foreach ($groups['data'] as $grp) {
 				  			// print_r($grp);
 				  			if(!in_array($grp['id'],$groups_posted)  OR !$config_model['filter_repeated_posts']){
-						  		$ret_obj = $this->fb->api('/'. $grp['id'] .'/'.$api, 'POST',$post_content);
-						  		$groups_posted[] = $grp['id'];
+						  		try{
+						  			$ret_obj = $this->fb->api('/'. $grp['id'] .'/'.$api, 'POST',$post_content);
+							  		$groups_posted[] = $grp['id'];
+						  		}catch(\Exception $e){
+						  			continue;
+						  		}
 				  			}
 					  		// print_r($ret_obj);
 				  		}

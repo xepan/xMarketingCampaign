@@ -9,6 +9,7 @@ class page_xMarketingCampaign_page_owner_main extends page_componentBase_page_ow
 	function initMainPage(){
 		
 		$tabs = $this->add('Tabs');	
+		$tabs->addTabUrl('xMarketingCampaign/page_owner_dashboard','<i class="fa fa-dashboard"></i> Dashboard');
 		$tabs->addTabUrl('xMarketingCampaign/page_owner_emailcontacts','<i class="fa fa-users"></i> Manage Contacts');
 		$tabs->addTabUrl('xMarketingCampaign/page_owner_newsletters','<i class="fa fa-envelope"></i> Manage NewsLetters');
 		$tabs->addTabUrl('xMarketingCampaign/page_owner_socialcontents','<i class="fa fa-share-alt-square"></i> Add SocialContent');
