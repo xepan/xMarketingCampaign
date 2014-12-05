@@ -68,16 +68,13 @@ class page_xMarketingCampaign_page_owner_campaigns extends page_componentBase_pa
 
 		$campaign_newsletter_model = $this->add('xMarketingCampaign/Model_CampaignNewsLetter');
 		$campaign_newsletter_model->addCondition('campaign_id',$campaign_id);
-
 		$crud = $v->add('CRUD');
-		$crud->setModel($campaign_newsletter_model);
-		
-		$crud->add('Controller_FormBeautifier');
-		
+		$crud->add('Controller_FormBeautifier');	
 		if($crud->grid){
 			$crud->add_button->setIcon('ui-icon-plusthick');
 		}
-
+		
+		$crud->setModel($campaign_newsletter_model);
 	}
 
 	function page_social_campaigns(){

@@ -18,6 +18,14 @@ class Model_CampaignNewsLetter extends \Model_Table {
 		// $this->addField('post_to_socials')->type('boolean')->defaultValue(false);
 		$this->addField('duration')->hint('Duration in days, starts from 0 as campaign start day')->type('Number');
 
+		$this->addExpression('posting_date')->set(function($m,$q){
+			$td=$m->add('xMarketingCampaign/Model_Campaign',array('table_alias'=>'td'));
+			$td->addCondition('id',$q->getField('campaign_id'));
+			$td->_dsql()->del('field');
+			$td->_dsql()->field('starting_date');
+
+    		return 'DATE_ADD(('.$td->_dsql()->render().'),INTERVAL duration DAY)';
+   		})->type('datetime');
 		$this->addHook('beforeSave',$this);
 	
 		// $this->add('dynamic_model/Controller_AutoCreator');

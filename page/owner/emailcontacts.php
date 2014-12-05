@@ -33,36 +33,31 @@ class page_xMarketingCampaign_page_owner_emailcontacts extends page_componentBas
 		}
 
 		$crud->add('Controller_FormBeautifier');
+		if($crud and $g = $crud->grid){
+			$g->addColumn('expander','emails');
+		}
+		
+	}
 
-		$subs_crud = $crud->addRef('xEnquiryNSubscription/Model_SubscriptionCategoryAssociation',array('label'=>'Emails'));	
+	function page_emails(){
+		$group_id = $this->api->stickyGET('xEnquiryNSubscription_Subscription_Categories_id');
+		$subs_crud = $this->add('CRUD');
+		$cat_sub_model = $this->add('xEnquiryNSubscription/Model_SubscriptionCategoryAssociation')->addCondition('category_id',$group_id);
+
+		$tmp = $cat_sub_model->getElement('subscriber_id')->getModel();
+		$tmp->getElement('from_app')->defaultValue('xMarketingCampaign');
+
+		$subs_crud->setModel($cat_sub_model);
 
 		if($subs_crud){
-			$subs_crud->add('Controller_FormBeautifier');
+			$subs_crud->add('Controller_FormBeautifier');			
+			// ->getElement('from_app')->defaultValue('xMarketingCampaign');
 		}
-
 		if($subs_crud and $g=$subs_crud->grid){
 			$subs_crud->add_button->setIcon('ui-icon-plusthick');
-			
-			// $g->addClass('panel panel-default');
-			// $g->addStyle('padding','20px');
-			// $g->sno=1;
-			// $g->addMethod('format_sno',function($grid,$field){
-			// 	$skip=0;
-			// 	foreach ($_GET as $key => $value) {
-			// 		if(strpos($key, '_paginator_skip') !== false) $skip = $_GET[$key];
-			// 	}
-			// 	$grid->current_row[$field] = $grid->sno + $skip;
-			// 	$grid->sno++;
-			// });
-
-			// $g->addColumn('sno','sno');
-			// $g->addOrder()->move('sno','first')->now();
-
 			$g->add_sno();
 			$g->addPaginator(100);
 			$g->addQuickSearch(array('email'));
 		}
-
 	}
-
 }
