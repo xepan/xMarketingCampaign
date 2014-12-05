@@ -40,7 +40,6 @@ class Model_CampaignSocialPost extends \Model_Table {
 
 		$this->addExpression('post_on_datetime')->set('CONCAT(post_on," ",at_hour,":",at_minute,":00")');
 
-
 		$this->addHook('beforeSave',$this);
 	
 		// $this->add('dynamic_model/Controller_AutoCreator');
