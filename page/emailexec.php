@@ -127,7 +127,7 @@ class page_xMarketingCampaign_page_emailexec extends Page{
 			$sent_this =  $mailer->send($message, $failed);
 			if(!$sent_this){
 				// This is not actually bounced. keep it a separate portion
-				// $email_queue->ref('subscriber_id')->set('is_bounced',true)->save();
+				$email_queue->ref('subscriber_id')->set('is_bounced',true)->saveAndUnload();
 			}else{
 				$sent += $sent_this;
 			}

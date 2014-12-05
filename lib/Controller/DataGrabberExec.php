@@ -175,7 +175,11 @@ class Controller_DataGrabberExec extends \AbstractController {
 				$subscription_save->save();	
 			}
 			
-			$category->addSubscriber($subscription_save);
+			try{
+				$category->addSubscriber($subscription_save);
+			}catch(\Exception $e){
+				
+			}
 
 			$subscription_save->destroy();
 		}
