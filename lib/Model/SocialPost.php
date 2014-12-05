@@ -48,8 +48,9 @@ class Model_SocialPost extends \Model_Table {
         		}
     		}
     	}
-
-		$this->add('dynamic_model/Controller_AutoCreator');
+    	$this->hasMany('xMarketingCampaign/CampaignSocialPost','socialpost_id');
+    	$this->addHook('beforeDelete',$this);
+		// $this->add('dynamic_model/Controller_AutoCreator');
 
 	}
 
@@ -58,5 +59,10 @@ class Model_SocialPost extends \Model_Table {
 	// 		throw $this->exception('Length Exceeding','ValidityCheck')->setField('message_160_chars');
 	// 	}
 	// }
-
+	function beforeDelete(){
+		$temp=$this->ref('xMarketingCampaign/CampaignSocialPost');
+		foreach ($temp as $junk) {
+			$temp->delete();
+		}
+	}
 }

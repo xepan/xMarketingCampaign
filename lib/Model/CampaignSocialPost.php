@@ -25,8 +25,8 @@ class Model_CampaignSocialPost extends \Model_Table {
 		$f=$this->addField('at_minute')->enum(array('00','15','30','45'))->group('c~3');
 		$f->icon="fa fa-clock-o~red";
 
-		$this->addField('is_posted')->type('boolean')->defaultValue(false)->system(true);
-		$this->addExpression('is_poting_done','is_posted')->type('boolean');
+		$this->addField('is_posted')->type('boolean')->defaultValue(false)->system(false);
+		$this->addExpression('is_posting_done','is_posted')->type('boolean');
 		$objects = scandir($plug_path = getcwd().DS.'epan-components'.DS.'xMarketingCampaign'.DS.'lib'.DS.'Controller'.DS.'SocialPosters');
     	foreach ($objects as $object) {
     		if ($object != "." && $object != "..") {
@@ -43,7 +43,7 @@ class Model_CampaignSocialPost extends \Model_Table {
 
 		$this->addHook('beforeSave',$this);
 	
-		$this->add('dynamic_model/Controller_AutoCreator');
+		// $this->add('dynamic_model/Controller_AutoCreator');
 	}
 
 	function beforeSave(){

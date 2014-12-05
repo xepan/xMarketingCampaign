@@ -23,10 +23,10 @@ class page_xMarketingCampaign_page_socialexec extends Page{
 			foreach ($socials as $social) {
 				if($all_postable_contents[$social]){
 					$this->add('xMarketingCampaign/Controller_SocialPosters_'.$social)->post($all_postable_contents->ref('socialpost_id'));
-					$all_postable_contents['is_posted']=true;
-					$all_postable_contents->save();
 				}
 			}	
+			$all_postable_contents['is_posted']=true;
+			$all_postable_contents->saveAndUnload();
 		}
 
 	}

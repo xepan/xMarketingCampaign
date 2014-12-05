@@ -9,14 +9,39 @@ class Model_LinkedinConfig extends \Model_Table{
 		parent::init();
 
 		$this->addField('name');
-		$this->addField('userid');
-		$this->addField('userid_returned');
+		// $this->addField('userid');
+		// $this->addField('userid_returned');
 		$this->addField('appId');
 		$this->addField('secret');
-		$this->addField('access_token')->system(false);
-		$this->addField('is_access_token_valid')->type('boolean')->defaultValue(false)->system(true);
+		$this->addField('post_in_groups')->type('boolean')->defaultValue(true);
+		$this->addField('filter_repeated_posts')->type("boolean")->defaultValue(true)->caption('Filter Repeated Posts in Groups');
+		// $this->addField('access_token')->system(false);
+		// $this->addField('is_access_token_valid')->type('boolean')->defaultValue(false)->system(true);
+		$this->hasMany('xMarketingCampaign/LinkedinUsers','linkedin_config_id');
 
 		$this->add('dynamic_model/Controller_AutoCreator');
+	}
+}
+
+class Model_LinkedinUsers extends \Model_Table{
+	public $table='xMarketingCampaign_LinkedinUsers';
+	
+	function init(){
+		parent::init();
+
+		$this->hasOne('xMarketingCampaign/LinkedinConfig','linkedin_config_id');
+		
+		$this->addField('name');
+		$this->addField('userid');
+		$this->addField('userid_returned');
+		$this->addField('access_token')->system(false)->type('text');
+		$this->addField('access_token_secret')->system(false)->type('text');
+		$this->addField('access_token_expiry')->system(false)->type('datetime');
+		$this->addField('is_access_token_valid')->type('boolean')->defaultValue(false)->system(true);
+		$this->addField('is_active')->type('boolean')->defaultValue(true);
+
+		$this->add('dynamic_model/Controller_AutoCreator');
+
 	}
 }
 
@@ -59,6 +84,8 @@ class Controller_SocialPosters_Linkedin extends Controller_SocialPosters_Base_So
 	function login_status(){
 		$client = $this->client;
 
+		$client->ResetAccessToken();
+
 		if(($success = $client->Initialize()))
 		{
 			if(($success = $client->Process()))
@@ -83,13 +110,13 @@ class Controller_SocialPosters_Linkedin extends Controller_SocialPosters_Base_So
 			$success = false;
 		}
 
-		if($success){
-			// echo $this->client->access_token;
-			$this->client_config['access_token'] = $this->client->access_token;
-			$this->client_config->save();
-		}
+		// if($success){
+		// 	// echo $this->client->access_token;
+		// 	$this->client_config['access_token'] = $this->client->access_token;
+		// 	$this->client_config->save();
+		// }
 
-		echo $user->name;
+		// echo $user->name;
 
 		return "https://www.linkedin.com/uas/oauth2/authorization?response_type=code&client_id=".$this->client_config['appId']."&scope=".urlencode($this->client->scope)."&state=XAVOCXEPANCODE123&redirect_uri=". urlencode($this->client->redirect_uri);
 
@@ -127,10 +154,29 @@ class Controller_SocialPosters_Linkedin extends Controller_SocialPosters_Base_So
 		}
 
 		if($success){
-			echo $this->client->access_token;
-			$this->client_config['access_token'] = $this->client->access_token;
-			$this->client_config->save();
+			// print_r($this->client);
+
+			$fetched_url=$user->siteStandardProfileRequest->url;
+
+			preg_match_all("/.*\?id=(\d*).*/", $fetched_url,$user_id);
+			// echo "dadsa" .$user_id[1][0];
+			// echo $this->client->access_token;
+			
+			$li_user= $this->add('xMarketingCampaign/Model_LinkedinUsers');
+			$li_user->addCondition('userid_returned',$user_id[1][0]);
+			$li_user->addCondition('linkedin_config_id',$this->client_config->id);
+			$li_user->tryLoadAny();
+
+			$li_user['name'] = $user->firstName;
+			$li_user['access_token'] = $this->client->access_token;
+			$li_user['access_token_secret'] = $this->client->access_token_secret;
+			$li_user['access_token_expiry'] = $this->client->access_token_expiry;
+			$li_user->save();
+			return true;
 		}
+		throw new \Exception("Error Processing Request", 1);
+		
+		return false;
 
 	}
 
@@ -138,6 +184,16 @@ class Controller_SocialPosters_Linkedin extends Controller_SocialPosters_Base_So
 	function config_page(){
 		$c=$this->owner->add('CRUD',array('allow_add'=>false,'allow_del'=>false));
 		$c->setModel('xMarketingCampaign/LinkedinConfig');
+		
+		$users_crud = $c->addRef('xMarketingCampaign/LinkedinUsers',array('label'=>'Users'));
+
+		if($c->grid and !$users_crud){
+			$f=$c->addFrame('Login URL');
+			if($f){
+				$f->add('View')->setElement('a')->setAttr('href','index.php?page=xMarketingCampaign_page_socialloginmanager&social_login_to=Linkedin')->setAttr('target','_blank')->set('index.php?page=xMarketingCampaign_page_socialloginmanager&social_login_to=Linkedin');
+			}
+		}
+
 		$c->add('Controller_FormBeautifier');
 	}
 
@@ -145,139 +201,179 @@ class Controller_SocialPosters_Linkedin extends Controller_SocialPosters_Base_So
 	  	try{
 	  		$client = $this->client;
 	  		
-	  		$client->access_token = $this->client_config['access_token'];
-	  		
+	  		$users=$this->client_config->ref('xMarketingCampaign/LinkedinUsers');
+	  		$users->addCondition('is_active',true);
+
+	  		$groups_posted=array();
+
 	  		if(!$client->Initialize())
 	  			echo "not init";
-	  		if(!$client->Process())
-	  			echo "not process";
-			
-	  		
-	  		echo "posting to ". $client->access_token;
 
-
-	  		// echo $parameters->content->{'submitted-image-url'};
-
-			if($params['url'] and $params['image']){
-				// Its a share 
-
-				/*
-					<?xml version="1.0" encoding="UTF-8"?>
-					<share>
-					    <comment>83% of employers will use social media to hire: 78% LinkedIn, 55% Facebook, 45% Twitter [SF Biz Times] http://bit.ly/cCpeOD</comment>
-					    <content>
-					        <title>Survey: Social networks top hiring tool - San Francisco Business Times</title>
-					        <submitted-url>http://sanfrancisco.bizjournals.com/sanfrancisco/stories/2010/06/28/daily34.html</submitted-url>
-					        <submitted-image-url>http://images.bizjournals.com/travel/cityscapes/thumbs/sm_sanfrancisco.jpg</submitted-image-url>
-					    </content>
-					    <visibility>
-					        <code>anyone</code>
-					    </visibility>
-					</share>
-				*/
-
-		  		$parameters = new \stdClass;
-				$parameters->content = new \stdClass;
-				$parameters->visibility = new \stdClass;
-				$parameters->visibility->code = 'anyone';
-		  		if($params['post_title']) $parameters->content->title = $params['post_title'];
-		  		if($params['message_255_chars']) $parameters->comment = $params['message_255_chars'];
+	  		foreach ($users as $junk) {
+	  			
+	  			// $client->ResetAccessToken();
 		  		
-		  		$parameters->content->{'submitted-url'} = $params['url'];
-		  		$parameters->content->{'submitted-image-url'} = 'http://'.$_SERVER['HTTP_HOST'].dirname($_SERVER['PHP_SELF']).'/' .$params['image'];
+				$client->access_token = $users['access_token'];
+				$client->access_token_secret = $users['access_token_secret'];
+
+		  		// if(!$client->StoreAccessToken($users['access_token']))
+		  		// 	throw new \Exception("Could not store token", 1);
 				
-				// share on self status
 
-				$success = $client->CallAPI(
-				'http://api.linkedin.com/v1/people/~/shares',
-				'POST', $parameters, array('FailOnAccessError'=>true, 'RequestContentType'=>'application/json'), $user);
-				echo "<pre>";
-
-				print_r($success);
-				// Share on all joined groups
-
-				// Get al lgroups
-				$success = $client->CallAPI(
-				'http://api.linkedin.com/v1/people/~/group-memberships',
-				'GET', null, array('FailOnAccessError'=>true, 'RequestContentType'=>'application/json'), $groups);
-
-				$groups =simplexml_load_string($groups);
-				$groups = json_encode($groups);
-				$groups = json_decode($groups,true);
-				print_r($groups['group-membership']);
-				$parameters->title = $parameters->content->title;
-				$parameters->summary = $parameters->comment;
-
-				unset($parameters->visibility);
-				unset($parameters->comment);
-
-				if(isset($groups['group-membership'])){
-					foreach ($groups['group-membership'] as $grp) {
-						// print_r($grp);
-						$grp_id= $grp['group']['id'];
-						echo $grp_id ."<br/>";
-
-						$success = $client->CallAPI(
-							'http://api.linkedin.com/v1/groups/'.$grp_id.'/posts',
-							'POST', $parameters, array('FailOnAccessError'=>true, 'RequestContentType'=>'application/json'), $groups);
-					}
-				}
-				echo "</pre>";
-
-
-			}
-
-			if(!$params['url'] and !$params['image']){
-				// its network update
-				/*	<?xml version='1.0' encoding='UTF-8'?>
-					<activity locale="en_US">
-				    	<content-type>linkedin-html</content-type>
-				    	<body>&amp;lt;a href=&amp;quot;http://www.linkedin.com/profile?viewProfile=&amp;amp;key=3639896&amp;amp;authToken=JdAa&amp;amp;authType=name&amp;amp;trk=api*a119686*s128146*&amp;quot;&amp;gt;Kirsten Jones&amp;lt;/a&amp;gt; is reading about &amp;lt;a href=&amp;quot;http://www.tigers.com&amp;quot;&amp;gt;Tigers&amp;lt;/a&amp;gt;http://www.tigers.com&amp;gt;Tigers&amp;lt;/a&amp;gt;..</body>
-					</activity>
-				*/
-				$parameters = new \stdClass;
-				$parameters->{'content-type'} = 'linkedin-html';
-		  		// if($params['post_title']) $parameters->content->title = $params['post_title'];
-		  		if($params['message_255_chars']) $parameters->body = $params['message_255_chars'];
+		  		// if(!$client->Process())
+		  		// 	echo "not process";
+				
 		  		
-				$success = $client->CallAPI(
-				'http://api.linkedin.com/v1/people/~/person-activities',
-				'POST', $parameters, array('FailOnAccessError'=>true, 'RequestContentType'=>'application/json'), $user);
+		  		echo "posting to ". $users['access_token'];//$client->access_token;
 
-				// Share on all joined groups
 
-				// Get al lgroups
-				$success = $client->CallAPI(
-				'http://api.linkedin.com/v1/people/~/group-memberships',
-				'GET', null, array('FailOnAccessError'=>true, 'RequestContentType'=>'application/json'), $groups);
+		  		// echo $parameters->content->{'submitted-image-url'};
 
-				$groups =simplexml_load_string($groups);
-				$groups = json_encode($groups);
-				$groups = json_decode($groups,true);
-				// echo "<pre>";
-				// print_r($groups['group-membership']);
-				$parameters->title = $parameters->content->title;
-				$parameters->summary = $parameters->comment;
+				if($params['url'] and $params['image']){
+					// Its a share 
 
-				unset($parameters->visibility);
-				unset($parameters->comment);
+					/*
+						<?xml version="1.0" encoding="UTF-8"?>
+						<share>
+						    <comment>83% of employers will use social media to hire: 78% LinkedIn, 55% Facebook, 45% Twitter [SF Biz Times] http://bit.ly/cCpeOD</comment>
+						    <content>
+						        <title>Survey: Social networks top hiring tool - San Francisco Business Times</title>
+						        <submitted-url>http://sanfrancisco.bizjournals.com/sanfrancisco/stories/2010/06/28/daily34.html</submitted-url>
+						        <submitted-image-url>http://images.bizjournals.com/travel/cityscapes/thumbs/sm_sanfrancisco.jpg</submitted-image-url>
+						    </content>
+						    <visibility>
+						        <code>anyone</code>
+						    </visibility>
+						</share>
+					*/
 
-				foreach ($groups['group-membership'] as $grp) {
-					// print_r($grp);
-					$grp_id= $grp['group']['id'];
-					echo $grp_id ."<br/>";
+			  		$parameters = new \stdClass;
+					$parameters->content = new \stdClass;
+					$parameters->visibility = new \stdClass;
+					$parameters->visibility->code = 'anyone';
+			  		if($params['post_title']) $parameters->content->title = $params['post_title'];
+			  		if($params['message_255_chars']) $parameters->comment = $params['message_255_chars'];
+			  		
+			  		$parameters->content->{'submitted-url'} = $params['url'];
+			  		$parameters->content->{'submitted-image-url'} = 'http://'.$_SERVER['HTTP_HOST'].dirname($_SERVER['PHP_SELF']).'/' .$params['image'];
+					
+					// share on self status
 
-					$success = $client->CallAPI(
-						'http://api.linkedin.com/v1/groups/'.$grp_id.'/posts',
-						'POST', $parameters, array('FailOnAccessError'=>true, 'RequestContentType'=>'application/json'), $groups);
+					$success = $client->CallAPI('http://api.linkedin.com/v1/people/~/shares','POST', $parameters, array('FailOnAccessError'=>true, 'RequestContentType'=>'application/json'), $user);
+					$success = $client->Finalize($success);
+					// echo "<pre>";
+
+					// print_r($success);
+					// Share on all joined groups
+
+					if($this->client_config['post_in_groups']){
+						// Get all groups
+						$success = $client->CallAPI('http://api.linkedin.com/v1/people/~/group-memberships','GET', null, array('FailOnAccessError'=>true, 'RequestContentType'=>'application/json'), $groups);
+
+						$groups =simplexml_load_string($groups);
+						$groups = json_encode($groups);
+						$groups = json_decode($groups,true);
+						print_r($groups['group-membership']);
+						$parameters->title = $parameters->content->title;
+						$parameters->summary = $parameters->comment;
+
+						unset($parameters->visibility);
+						unset($parameters->comment);
+
+						if(isset($groups['group-membership'])){
+							foreach ($groups['group-membership'] as $grp) {
+								// print_r($grp);
+								$grp_id= $grp['group']['id'];
+								echo $grp_id ."<br/>";
+								if(!in_array($grp_id, $groups_posted) OR !$this->client_config['filter_repeated_posts']){
+									try{
+
+										$success = $client->CallAPI(
+											'http://api.linkedin.com/v1/groups/'.$grp_id.'/posts',
+											'POST', $parameters, array('FailOnAccessError'=>true, 'RequestContentType'=>'application/json'), $groups);
+										$groups_posted[] = $grp_id;
+										$success = $client->Finalize($success);
+									}catch(\Exception $e){
+										continue;
+									}
+								}
+							}
+						}
+					}
+
+					// echo "</pre>";
+
 				}
-				// echo "</pre>";
+
+				if(!$params['url'] and !$params['image']){
+					// its network update
+					/*	<?xml version='1.0' encoding='UTF-8'?>
+						<activity locale="en_US">
+					    	<content-type>linkedin-html</content-type>
+					    	<body>&amp;lt;a href=&amp;quot;http://www.linkedin.com/profile?viewProfile=&amp;amp;key=3639896&amp;amp;authToken=JdAa&amp;amp;authType=name&amp;amp;trk=api*a119686*s128146*&amp;quot;&amp;gt;Kirsten Jones&amp;lt;/a&amp;gt; is reading about &amp;lt;a href=&amp;quot;http://www.tigers.com&amp;quot;&amp;gt;Tigers&amp;lt;/a&amp;gt;http://www.tigers.com&amp;gt;Tigers&amp;lt;/a&amp;gt;..</body>
+						</activity>
+					*/
+					$parameters = new \stdClass;
+					$parameters->{'content-type'} = 'linkedin-html';
+			  		// if($params['post_title']) $parameters->content->title = $params['post_title'];
+			  		if($params['message_255_chars']) $parameters->body = $params['message_255_chars'];
+			  		
+					$success = $client->CallAPI(
+					'http://api.linkedin.com/v1/people/~/person-activities',
+					'POST', $parameters, array('FailOnAccessError'=>true, 'RequestContentType'=>'application/json'), $user);
+					$success = $client->Finalize($success);
+
+					// Share on all joined groups
+
+					if($this->client_config['post_in_groups']){
+						// Get al lgroups
+						$success = $client->CallAPI(
+						'http://api.linkedin.com/v1/people/~/group-memberships',
+						'GET', null, array('FailOnAccessError'=>true, 'RequestContentType'=>'application/json'), $groups);
+
+						$groups =simplexml_load_string($groups);
+						$groups = json_encode($groups);
+						$groups = json_decode($groups,true);
+						// echo "<pre>";
+						// print_r($groups['group-membership']);
+						$parameters->title = $parameters->content->title;
+						$parameters->summary = $parameters->comment;
+
+						unset($parameters->visibility);
+						unset($parameters->comment);
+
+						foreach ($groups['group-membership'] as $grp) {
+							// print_r($grp);
+							$grp_id= $grp['group']['id'];
+							echo $grp_id ."<br/>";
+							if(!in_array($grp_id, $groups_posted)  OR !$this->client_config['filter_repeated_posts']){
+								try{
+									$success = $client->CallAPI(
+										'http://api.linkedin.com/v1/groups/'.$grp_id.'/posts',
+										'POST', $parameters, array('FailOnAccessError'=>true, 'RequestContentType'=>'application/json'), $groups);
+									$groups_posted[] = $grp_id;
+									$success = $client->Finalize($success);
+								}catch(\Exception $e){
+									continue;
+								}
+							}
+						}
+
+					}
+					
+					// echo "</pre>";
+				}
+
+				
+				// echo $client->debug_output;
+				if(!$success){
+					$this->add('View_Error')->set('Error in '. $client->access_token);
+					continue;
+				}
+
+				$this->add('View_Info')->set($users['name'].' POsted in linked in');
 
 			}
-
-			$success = $client->Finalize($success);
-
-			if(!$success) throw $this->exception('not posted'.$client->error);
 
 
 	  	}catch(\Exception $e){

@@ -12,11 +12,13 @@ class Model_GoogleBloggerConfig extends \Model_Table{
 		$this->addField('userid');
 		$this->addField('userid_returned');
 		$this->addField('blogid');
-		$this->addField('appId');
+		$this->addField('appId')->display(array('grid'=>'shorttext,wrap'));
 		$this->addField('secret');
-		$this->addField('access_token')->system(false);
-		$this->addField('refresh_token')->system(false);
+		$this->addField('access_token')->system(false)->type('text');
+		$this->addField('access_token_secret')->system(false)->type('text');
+		$this->addField('refresh_token')->system(false)->type('text');
 		$this->addField('is_access_token_valid')->type('boolean')->defaultValue(false)->system(true);
+		$this->addField('is_active')->type('boolean')->defaultValue(true);
 
 		$this->add('dynamic_model/Controller_AutoCreator');
 	}
@@ -131,7 +133,9 @@ class Controller_SocialPosters_GoogleBlogger extends Controller_SocialPosters_Ba
 
 		if($success){
 			// echo $this->client->access_token;
-			$this->client_config['access_token'] = $this->client->access_token;
+			$li_user['access_token'] = $this->client->access_token;
+			$li_user['access_token_secret'] = $this->client->access_token_secret;
+			$li_user['access_token_expiry'] = $this->client->access_token_expiry;
 			$this->client_config['refresh_token'] = $this->client->refresh_token;
 			$this->client_config->save();
 		}else{
@@ -144,12 +148,15 @@ class Controller_SocialPosters_GoogleBlogger extends Controller_SocialPosters_Ba
 	  	try{
 	  		$client = $this->client;
 	  		
+	  		if(!$client['is_active']) return;
+	  		
 	  		if(!$client->Initialize())
 	  			echo "not init";
 	  		if(!$client->Process())
 	  			echo "not process";
 
 	  		$client->access_token = $this->client_config['access_token'];
+	  		$client->access_token_secret = $users['access_token_secret'];
 	  		
 	  		echo "posting to ". $client->access_token;
 
@@ -185,6 +192,14 @@ class Controller_SocialPosters_GoogleBlogger extends Controller_SocialPosters_Ba
 	function config_page(){
 		$c=$this->owner->add('CRUD',array('allow_add'=>false,'allow_del'=>false));
 		$c->setModel('xMarketingCampaign/GoogleBloggerConfig');
+
+		if($c->grid){
+			$f=$c->addFrame('Login URL');
+			if($f){
+				$f->add('View')->setElement('a')->setAttr('href','index.php?page=xMarketingCampaign_page_socialloginmanager&social_login_to=GoogleBlogger')->setAttr('target','_blank')->set('index.php?page=xMarketingCampaign_page_socialloginmanager&social_login_to=GoogleBlogger');
+			}
+		}
+
 		$c->add('Controller_FormBeautifier');
 	}
 }
