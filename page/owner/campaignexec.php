@@ -1,6 +1,6 @@
 <?php
 
-class page_xMarketingCampaign_page_owner_campaignexec extends page_componentBase_page_owner_main{
+class page_xMarketingCampaign_page_owner_campaignexec extends page_xMarketingCampaign_page_owner_main{
 
 	public $today=null;
 

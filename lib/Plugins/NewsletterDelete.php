@@ -11,6 +11,7 @@ class Plugins_NewsletterDelete extends \componentBase\Plugin {
 	}
 
 	function Plugins_NewsletterDelete($obj, $newsletter){
+		
 		$campnews=$this->add('xMarketingCampaign/Model_CampaignNewsLetter');
 		$campnews->addCondition('newsletter_id',$newsletter->id);
 		$campnews->deleteAll();

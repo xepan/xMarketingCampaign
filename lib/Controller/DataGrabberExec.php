@@ -30,7 +30,7 @@ class Controller_DataGrabberExec extends \AbstractController {
 		foreach ($what_dtgrb_instance as $junk) {
 			$phrase_to_run = $this->add('xMarketingCampaign/Model_DataSearchPhrase');
 			$phrase_to_run->addCondition('data_grabber_id',$what_dtgrb_instance->id);
-			$phrase_to_run->addCondition('is_active',true);
+			$phrase_to_run->addCondition('is_grabbed',false);
 			// $phrase_to_run->addCondition('page_parameter_start_value','<=' , 'page_parameter_max_value');
 			$phrase_to_run->setOrder('last_page_checked_at');
 			$phrase_to_run->setLimit(1);
@@ -136,7 +136,7 @@ class Controller_DataGrabberExec extends \AbstractController {
 
 
 		if($phrase_to_run['content_provided']){
-			$phrase_to_run['is_active'] = false;
+			$phrase_to_run['is_grabbed'] = true;
 		}else{
 			$phrase_to_run['page_parameter_start_value'] = $phrase_to_run['page_parameter_start_value'] + $what_dtgrb_instance['records_per_page'];
 			

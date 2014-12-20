@@ -1361,7 +1361,7 @@ class oauth_client_class extends AbstractController
 		return true;
 	}
 
-	Function SendAPIRequest($url, $method, $parameters, $oauth, $options, &$response)
+	Function SendAPIRequest($url, $method, $parameters, $oauth, $options, &$response, &$response_header=array())
 	{
 		$this->response_status = 0;
 		$http = new http_class;
@@ -1503,6 +1503,7 @@ class oauth_client_class extends AbstractController
 			$http->Close();
 			return($this->SetError('it was not possible to retrieve the '.$options['Resource'].': '.$error));
 		}
+		$response_header = $headers;
 		$error = $http->ReadWholeReplyBody($data);
 		$http->Close();
 		if(strlen($error))
@@ -1994,7 +1995,7 @@ class oauth_client_class extends AbstractController
 		<do>
 {/metadocument}
 */
-	Function CallAPI($url, $method, $parameters, $options, &$response)
+	Function CallAPI($url, $method, $parameters, $options, &$response, &$headers=array())
 	{
 		if(!IsSet($options['Resource']))
 			$options['Resource'] = 'API call';
@@ -2069,7 +2070,9 @@ class oauth_client_class extends AbstractController
 			default:
 				return($this->SetError($this->oauth_version.' is not a supported version of the OAuth protocol'));
 		}
-		return($this->SendAPIRequest($url, $method, $parameters, $oauth, $options, $response));
+		$x=($this->SendAPIRequest($url, $method, $parameters, $oauth, $options, $response, $headers));
+		// print_r($headers);
+		return $x;
 	}
 /*
 {metadocument}

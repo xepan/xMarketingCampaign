@@ -9,8 +9,9 @@ class Model_DataGrabber extends \Model_Table{
 		parent::init();
 
 		$this->hasOne('Epan','epan_id');
+		$this->addCondition('epan_id',$this->api->current_website->id);
 
-		$f=$this->addField('name')->mandatory(true)->group('a~5~Grabbing From');
+		$f=$this->addField('name')->mandatory(true)->group('a~5~Grabbing From')->sortable(true);
 		$f->icon='fa fa-adn~red';
 		$f=$this->addField('site_url')->hint('Website URL, from where to grab data')->mandatory(true)->group('a~5');
 		$f->icon='fa fa-globe~red';		
@@ -37,7 +38,7 @@ class Model_DataGrabber extends \Model_Table{
 
 		$this->addExpression('is_runnable')->set(function($m,$q){
 			return "IF((UNIX_TIMESTAMP('".date('Y-m-d H:i:s')."') - UNIX_TIMESTAMP(last_run_at)) > required_pause_between_hits,1,0)";
-		});
+		})->type('boolean')->system(true);
 
 		$this->hasMany('xMarketingCampaign/DataSearchPhrase','data_grabber_id');
 		
@@ -45,7 +46,6 @@ class Model_DataGrabber extends \Model_Table{
 		$this->addHook('beforeSave',$this);
 
 
-		$this->addCondition('epan_id',$this->api->current_website->id);
 		// $this->add('dynamic_model/Controller_AutoCreator');
 
 	}

@@ -1,10 +1,11 @@
 <?php
 
-class page_xMarketingCampaign_page_owner_config extends page_componentBase_page_owner_main{
+class page_xMarketingCampaign_page_owner_config extends page_xMarketingCampaign_page_owner_main{
 
-	function page_index(){
+	function init(){
+		parent::init();
 
-		$tab = $this->add('Tabs');
+		$tab = $this->app->layout->add('Tabs');
 		$email_tab = $tab->addTab('<i class="fa fa-envelope"></i> <i class="fa fa-cog"></i> Email Config');
 		$api_tab = $tab->addTabURL('./social','<i class="fa fa-share-alt-square"></i> <i class="fa fa-cog"></i> Social Config');
 
@@ -13,8 +14,8 @@ class page_xMarketingCampaign_page_owner_config extends page_componentBase_page_
 		$crud = $email_tab->add('CRUD');
 		$crud->setModel($config_model);
 
-		$crud->add('Controller_FormBeautifier');
-		if($crud->grid){
+		// $crud->add('Controller_FormBeautifier');
+		if(!$crud->isEditing()){
 			$crud->add_button->setIcon('ui-icon-plusthick');
 		}
 		//End of Email Tab

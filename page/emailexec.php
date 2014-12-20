@@ -1,6 +1,6 @@
 <?php
 
-class page_xMarketingCampaign_page_emailexec extends Page{
+class page_xMarketingCampaign_page_emailexec extends Page {
 
 	function init(){
 		parent::init();

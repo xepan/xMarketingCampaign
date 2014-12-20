@@ -49,4 +49,30 @@ class Model_CampaignSocialPost extends \Model_Table {
 				
 	}
 
+	function isExist($campaign_id,$socialpost_id,$date,$hour=00,$minute=00){
+		$this->addCondition('is_posted',false);
+		$this->addCondition('campaign_id',$campaign_id);
+		$this->addCondition('socialpost_id',$socialpost_id);	
+		$this->addCondition('post_on',$date);	
+		$this->addCondition('at_hour',$hour);
+		$this->addCondition('at_minute',$minute);
+		$this->tryLoadAny();
+		if($this->loaded()){
+			return true;
+		}
+		return false;	
+	}
+
+	function createNew($campaign_id,$socialpost_id,$date,$hour=00,$minute=00){
+		if($this->loaded())
+			$this->unload();
+		$this['campaign_id'] = $campaign_id;
+		$this['socialpost_id'] = $socialpost_id;	
+		$this['post_on'] = $date;	
+		$this['at_hour'] = $hour;
+		$this['at_minute'] = $minute;
+		$this->save();
+		return true;
+	}
+
 }	

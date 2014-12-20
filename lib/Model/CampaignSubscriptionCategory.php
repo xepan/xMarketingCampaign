@@ -13,7 +13,7 @@ class Model_CampaignSubscriptionCategory extends \Model_Table {
 		$this->hasOne('xMarketingCampaign/Campaign','campaign_id');
 		$this->hasOne('xEnquiryNSubscription/SubscriptionCategories','category_id');
 
-		$this->addField('is_associate')->caption('is_associate')->type('boolean');
+		// $this->addField('is_associate')->caption('is_associate')->type('boolean');
 
 		$this->addExpression('name')->set(function($m,$q){
 			return $m->refSQL('category_id')->fieldQuery('name');

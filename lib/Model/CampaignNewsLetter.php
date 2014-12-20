@@ -41,4 +41,26 @@ class Model_CampaignNewsLetter extends \Model_Table {
 		}
 	}
 
+	function createNew($newsletter_id,$campaign_id,$duration){
+		if($this->loaded())
+			$this->unload();
+		$this['campaign_id'] = $campaign_id;
+		$this['newsletter_id'] = $newsletter_id;
+		$this['duration'] = $duration;
+		$this->save();
+		return true;
+	}
+
+
+	function isExist($newsletter_id,$campaign_id,$duration){
+		$this->addCondition('campaign_id',$campaign_id);
+		$this->addCondition('newsletter_id',$newsletter_id);
+		$this->addCondition('duration',$duration);
+		$this->tryLoadAny();
+		if($this->loaded()){
+			return true;
+		}
+		return false;
+	}
+
 }	
