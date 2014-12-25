@@ -51,8 +51,8 @@ class page_xMarketingCampaign_page_owner_dashboard extends page_xMarketingCampai
 			});	
 
 			$grid->addColumn('sentto','Send To');
-			$grid->setModel($email_queue,array('sent_to','name','sent_at'));
 		}
+		$grid->setModel($email_queue,array('sent_to','name','sent_at'));
 
 		//Recent Email Jobs Via xMarketingCampaign
 		$email_jobs_model = $this->add('xEnquiryNSubscription/Model_EmailJobs');

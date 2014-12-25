@@ -129,7 +129,7 @@ class Controller_DataGrabberExec extends \AbstractController {
 			$result = $this->grab($what_dtgrb_instance['site_url'],$content_parsed, $phrase_to_run['max_page_depth'],$phrase_to_run['max_domain_depth'],$phrase_to_run['max_page_depth'],$phrase_to_run['max_domain_depth'],$what_dtgrb_instance['site_url']);
 		// echo "</pre>";
 
-		if($what_dtgrb_instance->ref('xMarketingCampaign/DataSearchPhrase')->addCondition('is_active',true)->count()->getOne() ==0){
+		if($what_dtgrb_instance->ref('xMarketingCampaign/DataSearchPhrase')->addCondition('is_grabbed',false)->count()->getOne() ==0){
 			$what_dtgrb_instance['is_active']=false;
 			$what_dtgrb_instance->save();
 		}
