@@ -8,7 +8,7 @@ class page_xMarketingCampaign_page_owner_newsletters extends page_xMarketingCamp
 		$preview_vp = $this->add('VirtualPage');
 		$preview_vp->set(function($p){
 			$m=$p->add('xEnquiryNSubscription/Model_NewsLetter')->load($_GET['newsletter_id']);
-			$p->add('View')->set('Created '. $this->add('xDate')->diff(Carbon::now(),$m['created_at']) .', Last Modified '. $this->add('xDate')->diff(Carbon::now(),$m['updated_at']) )->addClass('atk-size-micro pull-right')->setStyle('color','#555');
+			$p->add('View')->set('Created '. $p->add('xDate')->diff(Carbon::now(),$m['created_at']) .', Last Modified '. $p->add('xDate')->diff(Carbon::now(),$m['updated_at']) )->addClass('atk-size-micro pull-right')->setStyle('color','#555');
 			$p->add('HR');
 			$p->add('View')->setHTML($m['matter']);
 		});

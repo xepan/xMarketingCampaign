@@ -16,6 +16,8 @@ class Controller_DataGrabberExec extends \AbstractController {
 
 	function init(){
 		parent::init();
+		
+		set_time_limit(0);
 
 		$this->owner->add('View_Info')->set('To Stop Auto Calling, Just Close this frame, But current runnig thred will not be terminated');
 
