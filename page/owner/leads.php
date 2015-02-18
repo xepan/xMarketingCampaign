@@ -12,7 +12,7 @@ class page_xMarketingCampaign_page_owner_leads extends page_xMarketingCampaign_p
 		$crud=$this->app->layout->add('CRUD');
 		$crud->setModel($leads);
 
-		
+		$crud->add('xHR/Controller_Acl');		
 
 	}
 }
